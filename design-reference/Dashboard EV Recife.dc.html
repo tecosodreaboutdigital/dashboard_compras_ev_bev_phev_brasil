@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/modernist-d3750569-703a-449b-bd27-f735cb2d7e38/styles.css">
+  <script src="_ds/modernist-d3750569-703a-449b-bd27-f735cb2d7e38/_ds_bundle.js"></script>
+  <script src="./image-slot.js"></script>
+  <style>
+    a { color: var(--color-accent); }
+    a:hover { color: var(--color-accent-700); }
+    [data-ev-theme="dark"] {
+      --color-bg: #1c1a19; --color-surface: #262423; --color-text: #f2efee;
+      --color-divider: color-mix(in srgb, #f2efee 24%, transparent);
+      --color-neutral-100: #322f2e; --color-neutral-200: #3d3a39; --color-neutral-800: #e7e4e3;
+      --color-accent-100: #3a1f18; --color-accent-200: #4d170e; --color-accent-300: #7c1405;
+      --color-accent-800: #ffc4b8; --color-accent-900: #ffe0d9;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,.5); --shadow-md: 0 3px 10px rgba(0,0,0,.55); --shadow-lg: 0 12px 32px rgba(0,0,0,.6);
+      --ev-surface-2: #2b2827;
+    }
+    [data-ev-theme="light"] { --ev-surface-2: var(--color-neutral-100); }
+    input[type="range"] { accent-color: var(--color-accent); }
+    @media (max-width: 1400px) { .ev-preslabel, .ev-searchbox { display: none; } }
+    .ev-tip-pop { opacity: 0; visibility: hidden; transition: opacity .1s; }
+    .ev-tip:hover .ev-tip-pop, .ev-tip:focus-within .ev-tip-pop { opacity: 1; visibility: visible; }
+    ::-webkit-scrollbar { width: 10px; height: 10px; }
+    ::-webkit-scrollbar-thumb { background: var(--color-divider); }
+  </style>
+</helmet>
+<div data-ev-theme="{{theme}}" style="min-height:100vh;background:var(--color-bg);color:var(--color-text);font-family:var(--font-body);display:flex;flex-direction:column;font-size:{{presentationScale}}">
+
+  <div style="position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:12px;padding:0 24px;height:64px;background:var(--color-bg);border-bottom:2px solid var(--color-divider);overflow:hidden">
+    <div style="font-family:var(--font-heading);font-weight:800;font-size:18px;white-space:nowrap;letter-spacing:-0.01em;flex:none">Decisão EV — Recife/PE</div>
+    <div class="ev-searchbox" style="position:relative;flex:1 1 auto;min-width:120px;max-width:340px">
+      <input class="input" placeholder="Buscar modelo, marca ou termo…" value="{{search}}" onChange="{{setSearch}}">
+      <sc-if value="{{hasSearchResults}}" hint-placeholder-val="{{false}}">
+        <div style="position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--color-surface);border:1px solid var(--color-divider);box-shadow:var(--shadow-md);z-index:70;max-height:280px;overflow:auto">
+          <sc-for list="{{searchResults}}" as="res" hint-placeholder-count="4">
+            <button onClick="{{res.onClick}}" style="display:flex;justify-content:space-between;width:100%;text-align:left;padding:8px 12px;background:none;border:none;border-bottom:1px solid var(--color-divider);cursor:pointer;font-size:13px;color:var(--color-text)">
+              <span>{{res.label}}</span><span class="tag tag-neutral" style="flex:none">{{res.kind}}</span>
+            </button>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:1"></div>
+    <button class="tag {{includeRevendaCls}}" style="cursor:pointer;border:1px solid var(--color-divider);flex:none" onClick="{{toggleIncludeRevenda}}" title="Incluir ou remover a revenda projetada do custo líquido">
+      <sc-if value="{{includeRevenda}}" hint-placeholder-val="{{true}}">✓ </sc-if>Revenda no custo
+    </button>
+    <button class="btn btn-secondary" onClick="{{togglePresentation}}" title="Modo apresentação" style="flex:none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18v12H3zM8 20h8M12 16v4"></path></svg>
+      <span class="ev-preslabel">Modo apresentação</span>
+    </button>
+    <button class="btn btn-icon btn-secondary" onClick="{{toggleTheme}}" title="Alternar tema">
+      <sc-if value="{{isDark}}" hint-placeholder-val="{{false}}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"></circle><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path></svg>
+      </sc-if>
+      <sc-if value="{{isLight}}" hint-placeholder-val="{{true}}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path></svg>
+      </sc-if>
+    </button>
+  </div>
+
+  <div style="display:flex;flex:1;min-height:0">
+
+    <sc-if value="{{isNotPresentation}}" hint-placeholder-val="{{true}}">
+      <div style="width:216px;flex:none;border-right:2px solid var(--color-divider);padding:12px 0;display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{navItems}}" as="item" hint-placeholder-count="8">
+          <button onClick="{{item.onClick}}" style="display:flex;align-items:center;gap:12px;padding:11px 20px;background:transparent;border:none;border-left:3px solid {{item.borderColor}};cursor:pointer;font-family:var(--font-body);font-size:13.5px;text-align:left;width:100%;color:{{item.textColor}}">
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex:none"><path d="{{item.iconD}}"></path></svg>
+            {{item.label}}
+          </button>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{presentation}}" hint-placeholder-val="{{false}}">
+      <div style="display:flex;gap:4px;padding:10px 24px;border-bottom:2px solid var(--color-divider);overflow-x:auto">
+        <sc-for list="{{navItems}}" as="item" hint-placeholder-count="8">
+          <button onClick="{{item.onClick}}" style="padding:8px 16px;background:transparent;border:none;border-bottom:3px solid {{item.borderColor}};cursor:pointer;font-family:var(--font-heading);font-weight:800;font-size:13px;color:{{item.textColor}};white-space:nowrap">{{item.label}}</button>
+        </sc-for>
+      </div>
+    </sc-if>
+
+    <div style="flex:1;min-width:0;overflow-y:auto;padding:32px;max-width:2200px;margin:0 auto;width:100%">
+
+      <sc-if value="{{isOverview}}" hint-placeholder-val="{{true}}">
+        <div>
+          <div class="card elev-sm" style="background:var(--color-accent-100);flex-direction:row;align-items:center;gap:20px;padding:16px 20px;margin-bottom:24px">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent-800)" stroke-width="2" stroke-linecap="round" style="flex:none"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4M12 8h.01"></path></svg>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;flex:1">
+              <select value="{{ctxPapel}}" onChange="{{onCtxPapel}}" style="background:var(--color-bg);color:var(--color-accent-800);border:1px solid var(--color-accent-300);font-size:11px;padding:3px 8px;font-family:var(--font-body);cursor:pointer">
+                <option value="unico">Carro único da família</option>
+                <option value="segundo">Segundo carro</option>
+                <option value="terceiro">Terceiro carro ou mais</option>
+              </select>
+              <select value="{{ctxIdade}}" onChange="{{onCtxIdade}}" style="background:var(--color-bg);color:var(--color-accent-800);border:1px solid var(--color-accent-300);font-size:11px;padding:3px 8px;font-family:var(--font-body);cursor:pointer">
+                <option value="18-25">Condutor de 18–25 anos</option>
+                <option value="26-35">Condutor de 26–35 anos</option>
+                <option value="36-55">Condutor de 36–55 anos</option>
+                <option value="56+">Condutor de 56+ anos</option>
+              </select>
+              <select value="{{ctxKmAno}}" onChange="{{onCtxKmAno}}" style="background:var(--color-bg);color:var(--color-accent-800);border:1px solid var(--color-accent-300);font-size:11px;padding:3px 8px;font-family:var(--font-body);cursor:pointer">
+                <option value="5000">5.000 km/ano</option>
+                <option value="9000">9.000 km/ano</option>
+                <option value="15000">15.000 km/ano</option>
+                <option value="20000">20.000 km/ano</option>
+                <option value="30000">30.000 km/ano</option>
+              </select>
+              <select value="{{ctxRecarga}}" onChange="{{onCtxRecarga}}" style="background:var(--color-bg);color:var(--color-accent-800);border:1px solid var(--color-accent-300);font-size:11px;padding:3px 8px;font-family:var(--font-body);cursor:pointer">
+                <option value="publica">Sem recarga em casa (rede pública)</option>
+                <option value="tomada">Tomada comum em casa</option>
+                <option value="wallbox">Wallbox em casa</option>
+              </select>
+            </div>
+            <button class="btn btn-ghost" onClick="{{goSimulator}}">Ajuste fino no Simulador</button>
+          </div>
+
+          <h2 style="margin-bottom:16px">Recomendações</h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-bottom:32px">
+            <sc-for list="{{topCards}}" as="c" hint-placeholder-count="4">
+              <div class="card elev-sm" style="padding:0;overflow:hidden">
+                <div style="position:relative;width:100%;height:180px;background:var(--ev-surface-2)">
+                  <sc-for list="{{c.photoSlides}}" as="slide" hint-placeholder-count="5">
+                    <image-slot id="{{slide.slotId}}" src="{{slide.src}}" shape="rect" fit="cover" placeholder="Foto {{slide.num}}" style="position:absolute;inset:0;width:100%;height:100%;display:{{slide.display}}"></image-slot>
+                  </sc-for>
+                  <button onClick="{{c.prevPhoto}}" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button>
+                  <button onClick="{{c.nextPhoto}}" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+                  <div style="position:absolute;left:6px;bottom:6px;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;font-size:10.5px;padding:2px 6px">{{c.photoCounter}}</div>
+                </div>
+                <div style="display:flex;gap:8px;padding:10px 16px;border-bottom:1px solid var(--color-divider)">
+                  <button class="btn btn-icon btn-secondary" onClick="{{c.onOpen}}" title="Ver ficha completa">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                  <a href="{{c.yt1Href}}" target="_blank" rel="noopener noreferrer" class="btn btn-icon btn-secondary" title="Vídeo 1" style="position:relative">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14"></rect><path d="M10 9l6 3-6 3z" fill="currentColor" stroke="none"></path></svg>
+                    <span style="position:absolute;bottom:0;right:0;font-size:8px;font-weight:800;background:var(--color-bg);line-height:1;padding:1px 3px">1</span>
+                  </a>
+                  <a href="{{c.yt2Href}}" target="_blank" rel="noopener noreferrer" class="btn btn-icon btn-secondary" title="Vídeo 2" style="position:relative">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14"></rect><path d="M10 9l6 3-6 3z" fill="currentColor" stroke="none"></path></svg>
+                    <span style="position:absolute;bottom:0;right:0;font-size:8px;font-weight:800;background:var(--color-bg);line-height:1;padding:1px 3px">2</span>
+                  </a>
+                </div>
+                <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+                  <span class="tag {{c.badgeClass}}" style="align-self:flex-start">{{c.badge}}</span>
+                  <div class="card-title">{{c.nome}}</div>
+                  <div style="font-size:13px;opacity:0.7">Preço de tabela: {{c.precoStr}}</div>
+                  <div>
+                    <span class="ev-tip" style="position:relative;display:inline-flex;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6;cursor:help;border-bottom:1px dotted var(--color-divider)">
+                      {{custoLabel}}
+                      <span class="ev-tip-pop" style="position:absolute;bottom:calc(100% + 8px);left:0;width:220px;background:#201e1d;color:#f8f4f4;font-size:11.5px;font-weight:400;text-transform:none;letter-spacing:normal;line-height:1.5;padding:10px 12px;box-shadow:var(--shadow-md);z-index:60;text-align:left">
+                        {{custoTip}}
+                        <button onClick="{{tipTco}}" style="display:block;margin-top:6px;background:none;border:none;padding:0;color:#ff9783;font-size:11px;cursor:pointer;text-decoration:underline">Ver no glossário →</button>
+                      </span>
+                    </span>
+                    <div style="font-family:var(--font-heading);font-weight:800;font-size:26px">{{c.liquidoStr}}</div>
+                    <div style="font-size:12px;opacity:0.7">{{c.rsKmStr}}/km</div>
+                  </div>
+                  <ul style="margin:0;padding-left:18px;font-size:12.5px;line-height:1.5;opacity:0.85">
+                    <li>{{c.b1}}</li>
+                    <li>{{c.b2}}</li>
+                    <li>{{c.b3}}</li>
+                  </ul>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+
+          <h2 style="margin-bottom:16px">Alertas</h2>
+          <div style="display:flex;flex-direction:column;gap:2px;margin-bottom:32px;border-top:2px solid var(--color-divider)">
+            <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 4px;border-bottom:1px solid var(--color-divider)">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><path d="M12 9v4M12 17h.01"></path></svg>
+              <div style="flex:1">
+                <div style="font-weight:600;font-size:14.5px">O seguro pode custar mais que a diferença entre os carros.</div>
+                <div style="font-size:13px;opacity:0.75;margin-top:2px">{{seguroMinMaxStr}} em 5 anos, no cenário base (seguro em ~3,5% do valor no ano 1). Cote antes de escolher o modelo.</div>
+              </div>
+              <button class="btn btn-ghost" onClick="{{goCompare}}" style="flex:none">Ver comparação</button>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 4px;border-bottom:1px solid var(--color-divider)">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><path d="M13 2 4 14h7l-1 8 9-12h-7z"></path></svg>
+              <div style="flex:1">
+                <div style="font-weight:600;font-size:14.5px">Sem tomada em casa, a energia custa 2,4× mais.</div>
+                <div style="font-size:13px;opacity:0.75;margin-top:2px">R$ 2,30/kWh na rede pública contra R$ 0,95 residencial.</div>
+              </div>
+              <button class="btn btn-ghost" onClick="{{goSensitivity}}" style="flex:none">Ver sensibilidade</button>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 4px;border-bottom:1px solid var(--color-divider)">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><rect x="2" y="5" width="20" height="14" rx="1"></rect><path d="M2 10h20"></path></svg>
+              <div style="flex:1">
+                <div style="font-weight:600;font-size:14.5px">Taxa 0% nem sempre vence o bônus.</div>
+                <div style="font-size:13px;opacity:0.75;margin-top:2px">No ORA 03, o bônus de R$ 20.000 supera os juros evitados em cerca de R$ 7.000.</div>
+              </div>
+              <button class="btn btn-ghost" onClick="{{openOra03}}" style="flex:none">Ver ficha do ORA 03</button>
+            </div>
+            <div style="display:flex;align-items:flex-start;gap:16px;padding:16px 4px;border-bottom:1px solid var(--color-divider)">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:none;margin-top:2px"><path d="M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1ZM2 7l2-4h16l2 4M6 14h4"></path></svg>
+              <div style="flex:1">
+                <div style="font-weight:600;font-size:14.5px">Híbridos plug-in (PHEV) sem tomada em casa viram híbridos comuns.</div>
+                <div style="font-size:13px;opacity:0.75;margin-top:2px">Sem recarga, o motor elétrico do Atto 2, Song Pro e Jaecoo 7 quase não é usado — o custo real vem quase todo do combustível.</div>
+              </div>
+              <button class="btn btn-ghost" onClick="{{goCompare}}" style="flex:none">Ver comparação</button>
+            </div>
+          </div>
+
+          <h2 style="margin-bottom:16px">
+            <span class="ev-tip" style="position:relative;display:inline-flex;cursor:help;border-bottom:1px dotted var(--color-divider)">
+              Ranking — {{custoLabel}}
+              <span class="ev-tip-pop" style="position:absolute;bottom:calc(100% + 8px);left:0;width:240px;background:#201e1d;color:#f8f4f4;font-size:11.5px;font-weight:400;text-transform:none;letter-spacing:normal;line-height:1.5;padding:10px 12px;box-shadow:var(--shadow-md);z-index:60;text-align:left">
+                {{custoTip}} A menor barra é a melhor.
+                <button onClick="{{tipTco}}" style="display:block;margin-top:6px;background:none;border:none;padding:0;color:#ff9783;font-size:11px;cursor:pointer;text-decoration:underline">Ver no glossário →</button>
+              </span>
+            </span>
+          </h2>
+          <div style="display:flex;flex-direction:column;border-top:2px solid var(--color-divider)">
+            <sc-for list="{{rankingList}}" as="r" hint-placeholder-count="16">
+              <button onClick="{{r.onClick}}" style="display:flex;align-items:center;gap:16px;padding:9px 4px;border:none;border-bottom:1px solid var(--color-divider);background:transparent;cursor:pointer;text-align:left;width:100%;font-family:var(--font-body);color:var(--color-text)">
+                <span style="width:22px;text-align:right;font-family:var(--font-heading);font-weight:800;font-size:13px;opacity:0.5">{{r.rank}}</span>
+                <span style="flex:none;width:170px;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{r.nome}}</span>
+                <span style="flex:1;height:16px;background:var(--ev-surface-2);position:relative">
+                  <span style="display:block;height:100%;background:var(--color-accent-300);width:{{r.barPct}}%"></span>
+                </span>
+                <span style="flex:none;width:110px;text-align:right;font-size:13px;font-weight:600">{{r.liquidoStr}}</span>
+              </button>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isCompare}}" hint-placeholder-val="{{false}}">
+        <div>
+          <h2 style="margin-bottom:16px">Comparar modelos</h2>
+
+          <div class="card elev-sm" style="margin-bottom:20px;gap:16px">
+            <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-end">
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6;margin-bottom:6px">Marca</div>
+                <div style="display:flex;gap:6px;flex-wrap:wrap">
+                  <sc-for list="{{marcasList}}" as="m" hint-placeholder-count="8">
+                    <button class="tag {{m.cls}}" style="cursor:pointer;border:1px solid var(--color-divider);gap:4px" onClick="{{m.onClick}}">
+                      <sc-if value="{{m.selected}}" hint-placeholder-val="{{false}}">✓ </sc-if>{{m.name}}
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6;margin-bottom:6px">Origem</div>
+                <div style="display:flex;gap:6px">
+                  <sc-for list="{{origensList}}" as="o" hint-placeholder-count="2">
+                    <button class="tag {{o.cls}}" style="cursor:pointer;border:1px solid var(--color-divider)" onClick="{{o.onClick}}">
+                      <sc-if value="{{o.selected}}" hint-placeholder-val="{{false}}">✓ </sc-if>{{o.name}}
+                    </button>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="min-width:220px">
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6;margin-bottom:6px">Preço: {{priceMinLabel}} – {{priceMaxLabel}}</div>
+                <input type="range" min="110000" max="190000" step="5000" value="{{priceMin}}" onChange="{{setPriceMin}}" style="width:100%">
+                <input type="range" min="110000" max="190000" step="5000" value="{{priceMax}}" onChange="{{setPriceMax}}" style="width:100%">
+              </div>
+              <div style="min-width:160px">
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6;margin-bottom:6px">Autonomia mín.: {{autonomiaMinLabel}}</div>
+                <input type="range" min="250" max="360" step="5" value="{{autonomiaMin}}" onChange="{{setAutonomiaMin}}" style="width:100%">
+              </div>
+              <button class="tag {{latinNcapCls}}" style="cursor:pointer;border:1px solid var(--color-divider)" onClick="{{toggleLatinNcap}}">
+                <sc-if value="{{latinNcapOnly}}" hint-placeholder-val="{{false}}">✓ </sc-if>Somente testados Latin NCAP
+              </button>
+              <button class="tag {{adasCls}}" style="cursor:pointer;border:1px solid var(--color-divider)" onClick="{{toggleAdas}}">
+                <sc-if value="{{adasOnly}}" hint-placeholder-val="{{false}}">✓ </sc-if>Somente com ACC
+              </button>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.6;margin-bottom:6px">Ordenar por</div>
+                <select class="input" value="{{sortBy}}" onChange="{{setSortBy}}" style="width:170px">
+                  <option value="liquido">Custo líquido</option>
+                  <option value="preco">Preço</option>
+                  <option value="autonomia">Autonomia</option>
+                  <option value="indice">Índice</option>
+                  <option value="rsKm">R$/km</option>
+                  <option value="consumo">Consumo</option>
+                </select>
+              </div>
+              <button class="btn btn-ghost" onClick="{{clearFilters}}">Limpar</button>
+            </div>
+            <div style="font-size:12.5px;opacity:0.65">Exibindo {{visibleCount}} de {{totalCount}} modelos · o índice é relativo ao conjunto filtrado</div>
+          </div>
+
+          <sc-if value="{{isEmpty}}" hint-placeholder-val="{{false}}">
+            <div class="card" style="align-items:center;text-align:center;padding:48px;gap:12px">
+              <div style="font-size:15px;font-weight:600">Nenhum modelo corresponde aos filtros.</div>
+              <button class="btn btn-primary" onClick="{{clearFilters}}">Limpar filtros</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{isNotEmpty}}" hint-placeholder-val="{{true}}">
+            <div style="overflow:auto;max-height:640px;border:1px solid var(--color-divider)">
+              <table class="table" style="min-width:1400px">
+                <thead>
+                  <tr>
+                    <th style="position:sticky;left:0;top:0;z-index:3;background:var(--ev-surface-2);min-width:230px">Modelo</th>
+                    <sc-for list="{{columns}}" as="col" hint-placeholder-count="12">
+                      <th style="position:sticky;top:0;background:var(--ev-surface-2);cursor:{{col.cursor}};text-align:{{col.align}}" onClick="{{col.onClick}}">
+                        <span class="ev-tip" style="position:relative;display:inline-flex;align-items:center;gap:3px;cursor:help;border-bottom:1px dotted var(--color-divider)">
+                          {{col.label}} {{col.arrow}}
+                          <span class="ev-tip-pop" style="position:absolute;bottom:calc(100% + 8px);{{col.tipSide}}:0;width:220px;background:#201e1d;color:#f8f4f4;font-size:11.5px;font-weight:400;text-transform:none;letter-spacing:normal;line-height:1.5;padding:10px 12px;box-shadow:var(--shadow-md);z-index:60;text-align:left">
+                            {{col.tip}}
+                            <button onClick="{{col.onGlossary}}" style="display:block;margin-top:6px;background:none;border:none;padding:0;color:#ff9783;font-size:11px;cursor:pointer;text-decoration:underline">Ver no glossário →</button>
+                          </span>
+                        </span>
+                      </th>
+                    </sc-for>
+                  </tr>
+                </thead>
+                <tbody>
+                  <sc-for list="{{tableRows}}" as="row" hint-placeholder-count="16">
+                    <tr>
+                      <td style="position:sticky;left:0;background:var(--color-bg)">
+                        <div style="display:flex;align-items:center;gap:10px">
+                          <input type="checkbox" checked="{{row.checked}}" disabled="{{row.checkDisabled}}" onChange="{{row.onToggleCheck}}">
+                          <image-slot id="ev-table-{{row.id}}" src="{{row.photoSrc}}" shape="rect" fit="cover" placeholder="" style="width:32px;height:20px;flex:none"></image-slot>
+                          <button onClick="{{row.onRowClick}}" style="background:none;border:none;padding:0;cursor:pointer;text-align:left;font-family:var(--font-body);color:var(--color-text)">
+                            <div style="font-size:13px;font-weight:600">{{row.nome}}</div>
+                            <div style="font-size:11px;opacity:0.6">{{row.marca}}</div>
+                          </button>
+                        </div>
+                      </td>
+                      <td style="text-align:right;background:{{row.precoBg}};color:{{row.precoFg}}">{{row.precoStr}}</td>
+                      <td style="text-align:right;background:{{row.liquidoBg}};color:{{row.liquidoFg}};font-weight:600">{{row.liquidoStr}}</td>
+                      <td style="text-align:right;background:{{row.rsKmBg}};color:{{row.rsKmFg}}">{{row.rsKmStr}}</td>
+                      <td style="text-align:right">{{row.rsMesStr}}</td>
+                      <td style="text-align:right;background:{{row.autonomiaBg}};color:{{row.autonomiaFg}}">{{row.autonomiaStr}}</td>
+                      <td style="text-align:right;background:{{row.consumoBg}};color:{{row.consumoFg}}">{{row.consumoStr}}</td>
+                      <td style="text-align:right">{{row.portaMalasStr}}</td>
+                      <td style="text-align:right">{{row.airbags}}</td>
+                      <td style="font-size:12px">{{row.latinNcap}}</td>
+                      <td style="font-size:12px">{{row.adas}}</td>
+                      <td style="text-align:right">{{row.revendaStr}}</td>
+                      <td style="text-align:right;background:{{row.indiceBg}};color:{{row.indiceFg}};font-weight:600">{{row.indiceStr}}</td>
+                    </tr>
+                  </sc-for>
+                </tbody>
+                <tfoot>
+                  <tr style="font-size:11.5px;opacity:0.65">
+                    <td style="position:sticky;left:0;background:var(--color-bg)">mín · med · máx</td>
+                    <td style="text-align:right">{{footer.preco}}</td>
+                    <td style="text-align:right">{{footer.liquido}}</td>
+                    <td style="text-align:right">{{footer.rsKm}}</td>
+                    <td></td>
+                    <td style="text-align:right">{{footer.autonomia}}</td>
+                    <td style="text-align:right">{{footer.consumo}}</td>
+                    <td></td><td></td><td></td><td></td><td></td>
+                    <td style="text-align:right">{{footer.indice}}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{hasCompare}}" hint-placeholder-val="{{false}}">
+            <div style="position:fixed;left:216px;right:0;bottom:0;z-index:35;background:var(--color-surface);border-top:2px solid var(--color-divider);box-shadow:var(--shadow-lg);padding:10px 32px;display:flex;align-items:center;gap:12px">
+              <span style="font-size:12.5px;font-weight:600;flex:none">{{compareCount}}/3 selecionados</span>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;flex:1">
+                <sc-for list="{{compareChips}}" as="ch" hint-placeholder-count="3">
+                  <span class="tag tag-accent" style="display:flex;align-items:center;gap:6px">
+                    {{ch.nome}}
+                    <button onClick="{{ch.onRemove}}" style="background:none;border:none;padding:0;cursor:pointer;color:inherit;font-size:12px;line-height:1">✕</button>
+                  </span>
+                </sc-for>
+              </div>
+              <button class="btn btn-ghost" onClick="{{clearCompare}}" style="flex:none">Limpar seleção</button>
+              <button class="btn btn-primary" onClick="{{expandCompare}}" style="flex:none">Comparar agora</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{compareExpanded}}" hint-placeholder-val="{{false}}">
+            <div style="position:fixed;inset:0;z-index:60;background:color-mix(in srgb, var(--color-neutral-900) 45%, transparent);display:flex;align-items:center;justify-content:center;padding:32px" onClick="{{collapseCompare}}">
+              <div style="background:var(--color-bg);box-shadow:var(--shadow-lg);max-width:1100px;width:100%;max-height:85vh;overflow:auto;padding:24px" onClick="{{stopProp}}">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+                  <div style="font-family:var(--font-heading);font-weight:800;font-size:18px">Comparação lado a lado ({{compareCount}}/3)</div>
+                  <button class="btn btn-icon btn-secondary" onClick="{{collapseCompare}}">✕</button>
+                </div>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Atributo</th>
+                      <sc-for list="{{compareVehicles}}" as="cv" hint-placeholder-count="3">
+                        <th>{{cv.nome}}</th>
+                      </sc-for>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <sc-for list="{{compareRows}}" as="row" hint-placeholder-count="17">
+                      <tr>
+                        <td style="font-weight:600;font-size:12.5px">{{row.label}}</td>
+                        <sc-for list="{{row.cells}}" as="cell" hint-placeholder-count="3">
+                          <td style="border:{{cell.border}}">{{cell.text}}</td>
+                        </sc-for>
+                      </tr>
+                    </sc-for>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isSimulator}}" hint-placeholder-val="{{false}}">
+        <div>
+          <h2 style="margin-bottom:16px">Simulador</h2>
+          <div style="display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start">
+            <div class="card elev-md" style="gap:16px">
+              <div class="card-title">Premissas</div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;opacity:0.7;margin-bottom:4px"><span>Quilometragem anual</span><span>{{sim.kmAnoLabel}}</span></div>
+                <input type="range" min="5000" max="30000" step="500" value="{{sim.kmAno}}" onChange="{{sim.setKmAno}}" style="width:100%">
+              </div>
+              <div>
+                <div style="font-size:12px;opacity:0.7;margin-bottom:6px">Horizonte de posse</div>
+                <div class="seg">
+                  <sc-for list="{{sim.anosOpts}}" as="o" hint-placeholder-count="4">
+                    <label class="seg-opt"><input type="radio" name="sim-anos" checked="{{o.checked}}" onChange="{{o.onClick}}">{{o.label}}</label>
+                  </sc-for>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;opacity:0.7;margin-bottom:4px"><span>Preço da recarga</span><span>{{sim.precoKwhLabel}}</span></div>
+                <input type="range" min="0.80" max="3.50" step="0.05" value="{{sim.precoKwh}}" onChange="{{sim.setPrecoKwh}}" style="width:100%">
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;opacity:0.7;margin-bottom:4px"><span>Seguro no ano 1</span><span>{{sim.seguroAno1Label}}</span></div>
+                <input type="range" min="2" max="8" step="0.25" value="{{sim.seguroAno1Pct}}" onChange="{{sim.setSeguroAno1}}" style="width:100%">
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;opacity:0.7;margin-bottom:4px"><span>Queda anual do seguro</span><span>{{sim.seguroQuedaLabel}}</span></div>
+                <input type="range" min="0" max="1" step="0.1" value="{{sim.seguroQuedaPct}}" onChange="{{sim.setSeguroQueda}}" style="width:100%">
+              </div>
+              <div>
+                <div style="font-size:12px;opacity:0.7;margin-bottom:6px">Cenário de revenda</div>
+                <div class="seg">
+                  <sc-for list="{{sim.cenarioOpts}}" as="o" hint-placeholder-count="3">
+                    <label class="seg-opt"><input type="radio" name="sim-cenario" checked="{{o.checked}}" onChange="{{o.onClick}}">{{o.label}}</label>
+                  </sc-for>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;opacity:0.7;margin-bottom:4px"><span>Fator de perda de recarga</span><span>{{sim.fatorPerdaLabel}}</span></div>
+                <input type="range" min="1.00" max="1.15" step="0.01" value="{{sim.fatorPerda}}" onChange="{{sim.setFatorPerda}}" style="width:100%">
+              </div>
+              <div style="display:flex;align-items:center;justify-content:space-between">
+                <span style="font-size:12px;opacity:0.7">Incluir emplacamento</span>
+                <label class="radio"><input type="checkbox" checked="{{sim.emplacamentoOn}}" onChange="{{sim.toggleEmplacamento}}"><span class="dot"></span></label>
+              </div>
+              <sc-if value="{{sim.emplacamentoOn}}" hint-placeholder-val="{{false}}">
+                <input class="input" type="number" min="0" max="8000" value="{{sim.emplacamentoVal}}" onChange="{{sim.setEmplacamento}}" placeholder="Valor do emplacamento">
+              </sc-if>
+              <button class="btn btn-secondary btn-block" onClick="{{sim.resetPremissas}}">Restaurar padrões</button>
+            </div>
+
+            <div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+                <div class="card" style="padding:14px"><div style="font-size:11px;opacity:0.6;text-transform:uppercase">Modelo vencedor</div><div style="font-weight:800;font-size:16px;margin-top:4px">{{sim.winnerName}}</div></div>
+                <div class="card" style="padding:14px"><div style="font-size:11px;opacity:0.6;text-transform:uppercase">Diferença para o 2º</div><div style="font-weight:800;font-size:16px;margin-top:4px">{{sim.gapToSecond}}</div></div>
+                <div class="card" style="padding:14px"><div style="font-size:11px;opacity:0.6;text-transform:uppercase">Amplitude 1º–11º</div><div style="font-weight:800;font-size:16px;margin-top:4px">{{sim.spread}}</div></div>
+              </div>
+
+              <div style="display:flex;gap:14px;margin-bottom:12px;flex-wrap:wrap;font-size:12px">
+                <sc-for list="{{sim.legend}}" as="leg" hint-placeholder-count="5">
+                  <button onClick="{{leg.onClick}}" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:0;opacity:{{leg.opacity}}">
+                    <span style="width:10px;height:10px;background:{{leg.color}}"></span>{{leg.label}}
+                  </button>
+                </sc-for>
+              </div>
+
+              <div style="display:flex;flex-direction:column;gap:10px">
+                <sc-for list="{{sim.bars}}" as="b" hint-placeholder-count="11">
+                  <div>
+                    <div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:3px"><span style="font-weight:600">{{b.nome}}</span><span>{{b.liquidoStr}}</span></div>
+                    <div style="display:flex;height:22px;width:100%;background:var(--ev-surface-2)">
+                      <sc-for list="{{b.segments}}" as="seg" hint-placeholder-count="5">
+                        <div style="width:{{seg.pct}}%;background:{{seg.color}}" title="{{seg.title}}"></div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+
+          <div class="card elev-sm" style="margin-top:32px">
+            <button onClick="{{sim.toggleWeights}}" style="background:none;border:none;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:space-between;width:100%;font-family:var(--font-heading);font-weight:800;font-size:16px">
+              Pesos por pessoa <span>{{sim.weightsToggleLabel}}</span>
+            </button>
+            <sc-if value="{{sim.weightsOpen}}" hint-placeholder-val="{{false}}">
+              <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px">
+                <sc-for list="{{sim.people}}" as="p" hint-placeholder-count="4">
+                  <div class="card" style="padding:12px;gap:8px">
+                    <input class="input" value="{{p.name}}" onChange="{{p.onName}}" style="font-weight:600">
+                    <sc-for list="{{p.sliders}}" as="s" hint-placeholder-count="8">
+                      <div>
+                        <div style="display:flex;justify-content:space-between;font-size:10.5px;opacity:0.7"><span>{{s.label}}</span><span>{{s.pct}}%</span></div>
+                        <input type="range" min="0" max="100" value="{{s.raw}}" onChange="{{s.onChange}}" style="width:100%">
+                      </div>
+                    </sc-for>
+                    <div style="font-size:11px;opacity:0.6;margin-top:4px">Top 3: {{p.top3}}</div>
+                  </div>
+                </sc-for>
+              </div>
+              <hr class="hr">
+              <div style="font-family:var(--font-heading);font-weight:800;font-size:13px;margin-bottom:8px">Ranking de consenso</div>
+              <div style="display:flex;flex-direction:column">
+                <sc-for list="{{sim.consensus}}" as="c" hint-placeholder-count="6">
+                  <div style="display:flex;justify-content:space-between;padding:6px 4px;border-bottom:1px solid var(--color-divider);font-size:13px;background:{{c.bg}}">
+                    <span>{{c.rank}}. {{c.nome}}</span><span style="opacity:0.7">{{c.spreadNote}}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isSensitivity}}" hint-placeholder-val="{{false}}">
+        <div style="display:flex;flex-direction:column;gap:24px">
+          <h2>Sensibilidade</h2>
+
+          <div class="card elev-sm">
+            <div class="card-title">Quilometragem anual × Custo líquido em 5 anos</div>
+            <div style="font-size:11.5px;opacity:0.6;margin-bottom:4px">Eixo horizontal: quilometragem rodada por ano (6 mil a 30 mil km). Eixo vertical: custo líquido projetado para 5 anos de posse, em reais — quanto mais alta a linha, mais caro o modelo nesse cenário.</div>
+            <div style="display:flex;gap:16px">
+              <div style="position:relative;flex:1;min-width:0">
+                <svg viewBox="0 0 640 275" style="width:100%;height:auto;display:block">
+                  <line x1="{{sens.kmChartX0}}" y1="{{sens.kmY0.y}}" x2="{{sens.kmChartX1}}" y2="{{sens.kmY0.y}}" stroke="var(--color-divider)" stroke-width="1"></line>
+                  <line x1="{{sens.kmChartX0}}" y1="{{sens.kmY1.y}}" x2="{{sens.kmChartX1}}" y2="{{sens.kmY1.y}}" stroke="var(--color-divider)" stroke-width="1"></line>
+                  <line x1="{{sens.kmChartX0}}" y1="{{sens.kmY2.y}}" x2="{{sens.kmChartX1}}" y2="{{sens.kmY2.y}}" stroke="var(--color-divider)" stroke-width="1"></line>
+                  <line x1="{{sens.kmChartX0}}" y1="{{sens.kmY3.y}}" x2="{{sens.kmChartX1}}" y2="{{sens.kmY3.y}}" stroke="var(--color-divider)" stroke-width="1"></line>
+                  <line x1="{{sens.kmChartX0}}" y1="{{sens.kmY4.y}}" x2="{{sens.kmChartX1}}" y2="{{sens.kmY4.y}}" stroke="var(--color-divider)" stroke-width="1"></line>
+                  <line x1="{{sens.kmChartX0}}" y1="{{sens.kmChartY0}}" x2="{{sens.kmChartX0}}" y2="{{sens.kmChartY1}}" stroke="var(--color-divider)" stroke-width="1.5"></line>
+                  <line x1="{{sens.kmChartX0}}" y1="{{sens.kmChartY1}}" x2="{{sens.kmChartX1}}" y2="{{sens.kmChartY1}}" stroke="var(--color-divider)" stroke-width="1.5"></line>
+                  <sc-for list="{{sens.kmLines}}" as="ln" hint-placeholder-count="16">
+                    <path d="{{ln.d}}" fill="none" stroke="{{ln.color}}" stroke-width="2" opacity="{{ln.lineOpacity}}"></path>
+                  </sc-for>
+                </svg>
+                <span style="position:absolute;left:2px;top:{{sens.kmY0.pct}}%;transform:translateY(-50%);font-size:11px;font-weight:600;opacity:0.8;white-space:nowrap">{{sens.kmY0.label}}</span>
+                <span style="position:absolute;left:2px;top:{{sens.kmY1.pct}}%;transform:translateY(-50%);font-size:11px;font-weight:600;opacity:0.8;white-space:nowrap">{{sens.kmY1.label}}</span>
+                <span style="position:absolute;left:2px;top:{{sens.kmY2.pct}}%;transform:translateY(-50%);font-size:11px;font-weight:600;opacity:0.8;white-space:nowrap">{{sens.kmY2.label}}</span>
+                <span style="position:absolute;left:2px;top:{{sens.kmY3.pct}}%;transform:translateY(-50%);font-size:11px;font-weight:600;opacity:0.8;white-space:nowrap">{{sens.kmY3.label}}</span>
+                <span style="position:absolute;left:2px;top:{{sens.kmY4.pct}}%;transform:translateY(-50%);font-size:11px;font-weight:600;opacity:0.8;white-space:nowrap">{{sens.kmY4.label}}</span>
+                <span style="position:absolute;bottom:2px;left:{{sens.kmX0.pct}}%;transform:translateX(-50%);font-size:11px;font-weight:600;opacity:0.8;white-space:nowrap">{{sens.kmX0.label}}</span>
+                <span style="position:absolute;bottom:2px;left:{{sens.kmX1.pct}}%;transform:translateX(-50%);font-size:11px;font-weight:600;opacity:0.8;white-space:nowrap">{{sens.kmX1.label}}</span>
+                <span style="position:absolute;bottom:2px;left:{{sens.kmX2.pct}}%;transform:translateX(-50%);font-size:11px;font-weight:600;opacity:0.8;white-space:nowrap">{{sens.kmX2.label}}</span>
+                <span style="position:absolute;bottom:2px;left:{{sens.kmX3.pct}}%;transform:translateX(-50%);font-size:11px;font-weight:600;opacity:0.8;white-space:nowrap">{{sens.kmX3.label}}</span>
+                <span style="position:absolute;bottom:2px;left:{{sens.kmX4.pct}}%;transform:translateX(-50%);font-size:11px;font-weight:600;opacity:0.8;white-space:nowrap">{{sens.kmX4.label}}</span>
+              </div>
+              <div style="width:190px;display:flex;flex-direction:column;gap:4px;font-size:11.5px;max-height:275px;overflow:auto">
+                <sc-for list="{{sens.kmLines}}" as="ln" hint-placeholder-count="16">
+                  <button onClick="{{ln.onToggle}}" style="display:flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:2px 0;opacity:{{ln.legendOpacity}};text-align:left">
+                    <span style="width:9px;height:9px;background:{{ln.color}};flex:none"></span>{{ln.nome}}
+                  </button>
+                </sc-for>
+              </div>
+            </div>
+            <div style="font-size:12.5px;opacity:0.7;margin-top:8px">As linhas não se cruzam na maior parte da faixa: energia é item menor neste perfil de uso.</div>
+          </div>
+
+          <div class="card elev-sm">
+            <div class="card-title">Break-even de revenda</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+              <span style="font-size:12px;opacity:0.7">Referência:</span>
+              <select class="input" value="{{sens.refId}}" onChange="{{sens.setRefId}}" style="width:220px">
+                <sc-for list="{{sens.refOptions}}" as="o" hint-placeholder-count="16">
+                  <option value="{{o.value}}">{{o.label}}</option>
+                </sc-for>
+              </select>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <sc-for list="{{sens.breakeven}}" as="b" hint-placeholder-count="15">
+                <div style="display:flex;align-items:center;gap:10px">
+                  <span style="width:160px;font-size:12.5px;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{b.nome}}</span>
+                  <span style="flex:1;height:16px;background:var(--ev-surface-2);position:relative">
+                    <span style="display:block;height:100%;width:{{b.barPct}}%;background:{{b.barColor}}"></span>
+                    <span style="position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--color-divider)"></span>
+                  </span>
+                  <span style="width:50px;text-align:right;font-size:12.5px;font-weight:600">{{b.pctStr}}</span>
+                </div>
+              </sc-for>
+              <div style="font-size:10.5px;opacity:0.55;text-align:right">linha em 50% — limite plausível para BEV em 5 anos</div>
+            </div>
+            <table class="table" style="margin-top:16px">
+              <thead><tr><th>Modelo</th><th style="text-align:right">Diferença atual</th><th style="text-align:right">Revenda modelada</th><th style="text-align:right">Revenda necessária</th><th>Avaliação</th></tr></thead>
+              <tbody>
+                <sc-for list="{{sens.breakeven}}" as="b" hint-placeholder-count="15">
+                  <tr><td>{{b.nome}}</td><td style="text-align:right">{{b.diffAtualStr}}</td><td style="text-align:right">{{b.revendaModeladaStr}}</td><td style="text-align:right">{{b.pctStr}}</td><td>{{b.avaliacao}}</td></tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="card elev-sm">
+            <div class="card-title">Preço da recarga (R$/kWh) × Custo de energia em 5 anos</div>
+            <div style="font-size:11.5px;opacity:0.6;margin-bottom:4px">Eixo horizontal: preço pago por kWh na recarga. Eixo vertical: custo total de energia projetado para 5 anos, no consumo médio da frota.</div>
+            <div style="position:relative">
+              <svg viewBox="0 0 640 220" style="width:100%;display:block">
+                <path d="{{sens.areaD}}" fill="var(--color-accent-100)" stroke="none"></path>
+                <path d="{{sens.lineD}}" fill="none" stroke="var(--color-accent)" stroke-width="2"></path>
+                <sc-for list="{{sens.markers}}" as="m" hint-placeholder-count="4">
+                  <line x1="{{m.x}}" y1="12" x2="{{m.x}}" y2="192" stroke="var(--color-divider)" stroke-dasharray="3,3"></line>
+                </sc-for>
+              </svg>
+              <span style="position:absolute;left:2px;top:2px;font-size:11px;font-weight:600;opacity:0.8">{{sens.priceYTopLabel}}</span>
+              <span style="position:absolute;left:2px;bottom:14px;font-size:11px;font-weight:600;opacity:0.8">{{sens.priceYBottomLabel}}</span>
+              <span style="position:absolute;left:{{sens.priceX0.pct}}%;bottom:0;transform:translateX(-50%);font-size:10.5px;font-weight:600;opacity:0.7">{{sens.priceX0.label}}</span>
+              <span style="position:absolute;left:{{sens.priceX1.pct}}%;bottom:0;transform:translateX(-50%);font-size:10.5px;font-weight:600;opacity:0.7">{{sens.priceX1.label}}</span>
+              <span style="position:absolute;left:{{sens.priceX2.pct}}%;bottom:0;transform:translateX(-50%);font-size:10.5px;font-weight:600;opacity:0.7">{{sens.priceX2.label}}</span>
+              <span style="position:absolute;left:{{sens.priceX3.pct}}%;bottom:0;transform:translateX(-50%);font-size:10.5px;font-weight:600;opacity:0.7">{{sens.priceX3.label}}</span>
+              <span style="position:absolute;left:{{sens.priceX4.pct}}%;bottom:0;transform:translateX(-50%);font-size:10.5px;font-weight:600;opacity:0.7">{{sens.priceX4.label}}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px;margin-top:6px">
+              <sc-for list="{{sens.markers}}" as="m" hint-placeholder-count="4">
+                <div style="font-size:11px;opacity:0.7">■ {{m.label}}</div>
+              </sc-for>
+            </div>
+            <div style="font-size:12.5px;opacity:0.7;margin-top:8px">Mesmo no pior caso, a energia não passa de {{sens.worstEnergia}} em 5 anos.</div>
+          </div>
+
+          <div class="card elev-sm">
+            <div class="card-title">Custo por km — BEV × PHEV</div>
+            <table class="table">
+              <thead><tr><th>Cenário</th><th style="text-align:right">R$/km</th><th>Nota</th></tr></thead>
+              <tbody>
+                <sc-for list="{{sens.custoKmRows}}" as="r" hint-placeholder-count="10">
+                  <tr style="background:{{r.bg}}"><td>{{r.cenario}}</td><td style="text-align:right;font-weight:600">{{r.rsKmStr}}</td><td style="font-size:12px;opacity:0.75">{{r.nota}}</td></tr>
+                </sc-for>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isSpec}}" hint-placeholder-val="{{false}}">
+        <div>
+          <h2 style="margin-bottom:16px">Ficha técnica</h2>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px">
+            <sc-for list="{{specCards}}" as="c" hint-placeholder-count="11">
+              <div class="card elev-sm" style="padding:0;overflow:hidden">
+                <div style="position:relative;width:100%;height:150px;background:var(--ev-surface-2)">
+                  <sc-for list="{{c.photoSlides}}" as="slide" hint-placeholder-count="5">
+                    <image-slot id="{{slide.slotId}}" src="{{slide.src}}" shape="rect" fit="cover" placeholder="Foto {{slide.num}}" style="position:absolute;inset:0;width:100%;height:100%;display:{{slide.display}}"></image-slot>
+                  </sc-for>
+                  <button onClick="{{c.prevPhoto}}" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button>
+                  <button onClick="{{c.nextPhoto}}" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+                  <div style="position:absolute;left:6px;bottom:6px;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;font-size:10.5px;padding:2px 6px">{{c.photoCounter}}</div>
+                </div>
+                <div style="display:flex;gap:8px;padding:10px 16px;border-bottom:1px solid var(--color-divider)">
+                  <button class="btn btn-icon btn-secondary" onClick="{{c.onOpen}}" title="Ver ficha completa">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  </button>
+                  <a href="{{c.yt1Href}}" target="_blank" rel="noopener noreferrer" class="btn btn-icon btn-secondary" title="Vídeo 1" style="position:relative">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14"></rect><path d="M10 9l6 3-6 3z" fill="currentColor" stroke="none"></path></svg>
+                    <span style="position:absolute;bottom:0;right:0;font-size:8px;font-weight:800;background:var(--color-bg);line-height:1;padding:1px 3px">1</span>
+                  </a>
+                  <a href="{{c.yt2Href}}" target="_blank" rel="noopener noreferrer" class="btn btn-icon btn-secondary" title="Vídeo 2" style="position:relative">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14"></rect><path d="M10 9l6 3-6 3z" fill="currentColor" stroke="none"></path></svg>
+                    <span style="position:absolute;bottom:0;right:0;font-size:8px;font-weight:800;background:var(--color-bg);line-height:1;padding:1px 3px">2</span>
+                  </a>
+                </div>
+                <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+                  <span class="tag tag-outline" style="align-self:flex-start">{{c.origem}}</span>
+                  <div class="card-title" style="font-size:15px">{{c.nome}}</div>
+                  <div style="font-size:12.5px;opacity:0.7">{{c.precoStr}}</div>
+                  <div style="display:flex;gap:10px;font-size:11px;opacity:0.8">
+                    <span>{{c.autonomiaStr}}</span><span>·</span><span>{{c.potenciaStr}}</span><span>·</span><span>{{c.portaMalasStr}}</span>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <span style="flex:1;height:6px;background:var(--ev-surface-2)"><span style="display:block;height:100%;width:{{c.indice}}%;background:var(--color-accent)"></span></span>
+                    <span style="font-size:11px;font-weight:600">{{c.indiceStr}}</span>
+                  </div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isFinancing}}" hint-placeholder-val="{{false}}">
+        <div>
+          <h2 style="margin-bottom:16px">Formatos de compra</h2>
+          <div style="display:grid;grid-template-columns:420px 1fr;gap:24px;align-items:start;margin-bottom:24px">
+            <div class="card elev-md" style="gap:16px">
+              <div class="card-title">Taxa 0% ou bônus à vista?</div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;opacity:0.7;margin-bottom:6px"><span>Modelos (até 3)</span><span>{{fin.selectedCount}}/3</span></div>
+                <div style="display:flex;flex-direction:column;gap:2px;max-height:220px;overflow:auto;border:1px solid var(--color-divider);padding:6px">
+                  <sc-for list="{{fin.modeloChecklist}}" as="m" hint-placeholder-count="16">
+                    <label style="display:flex;align-items:center;gap:8px;padding:4px 4px;font-size:12.5px;cursor:pointer">
+                      <input type="checkbox" checked="{{m.checked}}" disabled="{{m.disabled}}" onChange="{{m.onToggle}}">
+                      {{m.nome}}
+                    </label>
+                  </sc-for>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;opacity:0.7;margin-bottom:4px"><span>Entrada</span><span>{{fin.entradaLabel}}</span></div>
+                <input type="range" min="30" max="90" step="5" value="{{fin.entradaPct}}" onChange="{{fin.setEntrada}}" style="width:100%">
+              </div>
+              <div>
+                <div style="font-size:12px;opacity:0.7;margin-bottom:6px">Prazo</div>
+                <div class="seg">
+                  <sc-for list="{{fin.prazoOpts}}" as="o" hint-placeholder-count="4">
+                    <label class="seg-opt"><input type="radio" name="fin-prazo" checked="{{o.checked}}" onChange="{{o.onClick}}">{{o.label}}</label>
+                  </sc-for>
+                </div>
+              </div>
+              <div class="field">
+                <label>Bônus à vista alternativo</label>
+                <input class="input" type="number" min="0" value="{{fin.bonusAlt}}" onChange="{{fin.setBonusAlt}}">
+              </div>
+              <div class="field">
+                <label>Taxa se recusar o 0% (% a.m.)</label>
+                <input class="input" type="number" min="0" step="0.01" value="{{fin.taxaRecusa}}" onChange="{{fin.setTaxaRecusa}}">
+              </div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <button class="tag tag-neutral" style="cursor:pointer;border:1px solid var(--color-divider)" onClick="{{fin.chip1}}">ORA 03 · 60% · 24m</button>
+                <button class="tag tag-neutral" style="cursor:pointer;border:1px solid var(--color-divider)" onClick="{{fin.chip2}}">Dolphin GS · 60% · 24m</button>
+              </div>
+            </div>
+
+            <div>
+              <sc-if value="{{fin.hasSingle}}" hint-placeholder-val="{{true}}">
+                <div style="display:flex;gap:16px;margin-bottom:16px;align-items:stretch">
+                  <div class="card elev-sm" style="background:var(--color-accent-100);align-items:flex-start;flex:1">
+                    <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.06em;opacity:0.7">{{fin.single.nome}} — melhor opção</div>
+                    <div style="font-family:var(--font-heading);font-weight:800;font-size:30px">{{fin.single.melhor}}</div>
+                    <div style="font-size:13.5px;opacity:0.8">Vantagem de {{fin.single.vantagemStr}} em relação à outra opção</div>
+                  </div>
+                  <div style="position:relative;width:220px;flex:none;background:var(--ev-surface-2)">
+                    <sc-for list="{{fin.single.photoSlides}}" as="slide" hint-placeholder-count="5">
+                      <image-slot id="{{slide.slotId}}" src="{{slide.src}}" shape="rect" fit="cover" placeholder="Foto {{slide.num}}" style="position:absolute;inset:0;width:100%;height:100%;display:{{slide.display}}"></image-slot>
+                    </sc-for>
+                    <button onClick="{{fin.single.prevPhoto}}" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:none;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button>
+                    <button onClick="{{fin.single.nextPhoto}}" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:24px;height:24px;border:none;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+                    <div style="position:absolute;left:6px;bottom:6px;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;font-size:10px;padding:2px 6px">{{fin.single.photoCounter}}</div>
+                  </div>
+                </div>
+                <table class="table" style="margin-bottom:20px">
+                  <tbody>
+                    <tr><td>Preço do veículo</td><td style="text-align:right;font-weight:600">{{fin.single.precoStr}}</td></tr>
+                    <tr><td>Saldo financiado</td><td style="text-align:right;font-weight:600">{{fin.single.saldoStr}}</td></tr>
+                    <tr><td>Parcela na taxa de mercado</td><td style="text-align:right;font-weight:600">{{fin.single.parcelaStr}}</td></tr>
+                    <tr><td>Total pago no financiamento</td><td style="text-align:right;font-weight:600">{{fin.single.totalPagoStr}}</td></tr>
+                    <tr><td>Juros evitados com a taxa 0%</td><td style="text-align:right;font-weight:600">{{fin.single.jurosEvitadosStr}}</td></tr>
+                    <tr><td>Bônus à vista alternativo</td><td style="text-align:right;font-weight:600">{{fin.single.bonusStr}}</td></tr>
+                  </tbody>
+                </table>
+                <div class="card elev-sm">
+                  <div class="card-title" style="font-size:14px">Ponto de virada por percentual de entrada</div>
+                  <div style="position:relative;margin-top:8px">
+                    <svg viewBox="0 0 640 200" style="width:100%;display:block">
+                      <path d="{{fin.jurosD}}" fill="none" stroke="var(--color-accent)" stroke-width="2"></path>
+                      <path d="{{fin.bonusD}}" fill="none" stroke="var(--color-neutral-600)" stroke-width="2" stroke-dasharray="4,4"></path>
+                      <sc-if value="{{fin.hasCross}}" hint-placeholder-val="{{false}}">
+                        <circle cx="{{fin.crossX}}" cy="{{fin.crossY}}" r="4" fill="var(--color-accent-800)"></circle>
+                      </sc-if>
+                    </svg>
+                    <span style="position:absolute;left:2px;top:2px;font-size:10.5px;font-weight:600;opacity:0.8;color:var(--color-accent)">— Juros evitados (taxa 0%)</span>
+                    <span style="position:absolute;left:2px;top:16px;font-size:10.5px;font-weight:600;opacity:0.8">┄ Bônus à vista</span>
+                    <span style="position:absolute;left:2px;bottom:0;font-size:10.5px;font-weight:600;opacity:0.6">30% entrada</span>
+                    <span style="position:absolute;right:2px;bottom:0;font-size:10.5px;font-weight:600;opacity:0.6">90% entrada</span>
+                  </div>
+                  <div style="font-size:12.5px;opacity:0.75;margin-top:6px">{{fin.crossLabel}}</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{fin.hasMultiple}}" hint-placeholder-val="{{false}}">
+                <div class="card-title" style="margin-bottom:10px">Comparação entre {{fin.selectedCount}} modelos</div>
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <sc-for list="{{fin.results}}" as="r" hint-placeholder-count="3">
+                        <th style="text-align:right">
+                          <image-slot id="ev-fin-{{r.id}}" src="{{r.photoSrc}}" shape="rect" fit="cover" style="width:120px;height:68px;margin-left:auto"></image-slot>
+                        </th>
+                      </sc-for>
+                    </tr>
+                    <tr>
+                      <th>Atributo</th>
+                      <sc-for list="{{fin.results}}" as="r" hint-placeholder-count="3"><th>{{r.nome}}</th></sc-for>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Preço do veículo</td><sc-for list="{{fin.results}}" as="r" hint-placeholder-count="3"><td style="text-align:right">{{r.precoStr}}</td></sc-for></tr>
+                    <tr><td>Saldo financiado</td><sc-for list="{{fin.results}}" as="r" hint-placeholder-count="3"><td style="text-align:right">{{r.saldoStr}}</td></sc-for></tr>
+                    <tr><td>Parcela na taxa de mercado</td><sc-for list="{{fin.results}}" as="r" hint-placeholder-count="3"><td style="text-align:right">{{r.parcelaStr}}</td></sc-for></tr>
+                    <tr><td>Total pago no financiamento</td><sc-for list="{{fin.results}}" as="r" hint-placeholder-count="3"><td style="text-align:right">{{r.totalPagoStr}}</td></sc-for></tr>
+                    <tr><td>Juros evitados (taxa 0%)</td><sc-for list="{{fin.results}}" as="r" hint-placeholder-count="3"><td style="text-align:right">{{r.jurosEvitadosStr}}</td></sc-for></tr>
+                    <tr><td>Bônus à vista</td><sc-for list="{{fin.results}}" as="r" hint-placeholder-count="3"><td style="text-align:right">{{r.bonusStr}}</td></sc-for></tr>
+                    <tr><td style="font-weight:700">Melhor opção</td><sc-for list="{{fin.results}}" as="r" hint-placeholder-count="3"><td style="text-align:right;font-weight:700;background:var(--color-accent-100)">{{r.melhor}}</td></sc-for></tr>
+                    <tr><td>Vantagem</td><sc-for list="{{fin.results}}" as="r" hint-placeholder-count="3"><td style="text-align:right">{{r.vantagemStr}}</td></sc-for></tr>
+                  </tbody>
+                </table>
+                <div style="font-size:11.5px;opacity:0.6;margin-top:6px">Entrada, prazo, taxa e bônus alternativo à esquerda se aplicam a todos os modelos selecionados, para comparar em igualdade de condições.</div>
+              </sc-if>
+            </div>
+          </div>
+
+          <div class="card" style="gap:10px;max-width:760px">
+            <div style="font-size:13px;line-height:1.6">Compare sempre o <strong>valor total pago</strong>, nunca a taxa nominal isolada. Exija o CET por escrito.</div>
+            <div style="font-size:13px;line-height:1.6">Taxa nominal de 0% convive com tarifa de cadastro, IOF, registro de gravame e seguro prestamista embutido.</div>
+            <div style="font-size:13px;line-height:1.6"><strong>Atenção à compra por CNPJ:</strong> os bônus de varejo da BYD e o Programa de Recompra de 80% da FIPE não se aplicam à modalidade venda direta.</div>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isGlossary}}" hint-placeholder-val="{{false}}">
+        <div>
+          <h2 style="margin-bottom:16px">Glossário</h2>
+          <input class="input" placeholder="Buscar termo…" value="{{glossarySearch}}" onChange="{{setGlossarySearch}}" style="max-width:360px;margin-bottom:12px">
+          <div style="display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap">
+            <sc-for list="{{glossaryCats}}" as="cat" hint-placeholder-count="4">
+              <button class="tag {{cat.cls}}" style="cursor:pointer;border:1px solid var(--color-divider)" onClick="{{cat.onClick}}">{{cat.name}}</button>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;border-top:2px solid var(--color-divider);max-width:760px">
+            <sc-for list="{{glossaryFiltered}}" as="g" hint-placeholder-count="8">
+              <div style="padding:14px 4px;border-bottom:1px solid var(--color-divider)">
+                <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:4px;flex-wrap:wrap">
+                  <span style="font-family:var(--font-heading);font-weight:800;font-size:15px">{{g.termo}}</span>
+                  <sc-if value="{{g.hasSigla}}" hint-placeholder-val="{{false}}"><span class="tag tag-outline">{{g.sigla}}</span></sc-if>
+                  <span class="tag tag-neutral">{{g.categoria}}</span>
+                </div>
+                <div style="font-size:13.5px;opacity:0.85;line-height:1.5">{{g.definicao}}</div>
+              </div>
+            </sc-for>
+            <sc-if value="{{glossaryEmpty}}" hint-placeholder-val="{{false}}">
+              <div style="padding:32px;text-align:center;opacity:0.6;font-size:13px">Nenhum termo encontrado.</div>
+            </sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isSources}}" hint-placeholder-val="{{false}}">
+        <div>
+          <h2 style="margin-bottom:16px">Fontes</h2>
+          <sc-for list="{{fontesGroups}}" as="g" hint-placeholder-count="3">
+            <div style="margin-bottom:24px">
+              <div style="font-family:var(--font-heading);font-weight:800;font-size:14px;margin-bottom:8px">{{g.titulo}}</div>
+              <div style="display:flex;flex-direction:column;border-top:2px solid var(--color-divider)">
+                <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="4">
+                  <div style="display:flex;align-items:center;gap:12px;padding:10px 4px;border-bottom:1px solid var(--color-divider);font-size:13px">
+                    <span style="flex:1">{{r.nome}}</span>
+                    <span style="flex:2;opacity:0.7;font-size:12px">{{r.extraido}}</span>
+                    <span class="tag tag-outline">{{r.status}}</span>
+                    <a href="{{r.url}}" target="_blank" rel="noopener noreferrer" style="font-size:12px">Abrir ↗</a>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{isPlaceholder}}" hint-placeholder-val="{{false}}">
+        <div class="card elev-sm" style="align-items:center;text-align:center;padding:64px;gap:12px;max-width:520px;margin:60px auto">
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:22px">{{placeholderInfo.title}}</div>
+          <div style="font-size:14px;opacity:0.75;line-height:1.6">{{placeholderInfo.desc}}</div>
+          <button class="btn btn-primary" onClick="{{goOverview}}" style="margin-top:8px">Voltar à Visão geral</button>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+
+  <sc-if value="{{hasSnackbar}}" hint-placeholder-val="{{false}}">
+    <div style="position:fixed;left:24px;bottom:24px;z-index:80;background:#201e1d;color:#f8f4f4;padding:12px 16px;font-size:13px;box-shadow:var(--shadow-lg);max-width:340px">{{snackbarText}}</div>
+  </sc-if>
+
+  <sc-if value="{{hasDrawer}}" hint-placeholder-val="{{false}}">
+    <div style="position:fixed;inset:0;z-index:50;background:color-mix(in srgb, var(--color-neutral-900) 45%, transparent);display:flex;justify-content:flex-end" onClick="{{closeDrawerBg}}">
+      <div style="width:480px;max-width:100%;height:100%;background:var(--color-bg);box-shadow:var(--shadow-lg);overflow-y:auto;padding:0" onClick="{{stopProp}}">
+        <div style="display:flex;justify-content:flex-end;padding:12px">
+          <button class="btn btn-icon btn-secondary" onClick="{{closeDrawer}}">✕</button>
+        </div>
+        <div style="padding:0 28px 28px">
+          <div style="position:relative;width:100%;height:180px;background:var(--ev-surface-2);margin-bottom:16px">
+            <sc-for list="{{drawer.photoSlides}}" as="slide" hint-placeholder-count="5">
+              <image-slot id="{{slide.slotId}}" src="{{slide.src}}" shape="rect" fit="cover" placeholder="Foto {{slide.num}}" style="position:absolute;inset:0;width:100%;height:100%;display:{{slide.display}}"></image-slot>
+            </sc-for>
+            <button onClick="{{drawer.prevPhoto}}" style="position:absolute;left:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"></path></svg></button>
+            <button onClick="{{drawer.nextPhoto}}" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:26px;height:26px;border:none;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg></button>
+            <div style="position:absolute;left:6px;bottom:6px;background:color-mix(in srgb, var(--color-neutral-900) 60%, transparent);color:#fff;font-size:10.5px;padding:2px 6px">{{drawer.photoCounter}}</div>
+          </div>
+          <div class="tag tag-outline" style="margin-bottom:10px">{{drawer.origem}}</div>
+          <h3 style="margin-bottom:2px">{{drawer.nome}}</h3>
+          <div style="opacity:0.7;font-size:13px;margin-bottom:16px">{{drawer.marca}} · {{drawer.precoStr}}</div>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+            <div class="card" style="padding:12px;gap:2px"><span class="ev-tip" style="position:relative;display:inline-flex;font-size:10px;opacity:0.6;text-transform:uppercase;cursor:help;border-bottom:1px dotted var(--color-divider)">Autonomia<span class="ev-tip-pop" style="position:absolute;bottom:calc(100% + 8px);left:0;width:200px;background:#201e1d;color:#f8f4f4;font-size:11.5px;font-weight:400;text-transform:none;letter-spacing:normal;line-height:1.5;padding:10px 12px;box-shadow:var(--shadow-md);z-index:60;text-align:left">Distância percorrida com a bateria cheia, no ciclo declarado pelo fabricante.<button onClick="{{tipAutonomia}}" style="display:block;margin-top:6px;background:none;border:none;padding:0;color:#ff9783;font-size:11px;cursor:pointer;text-decoration:underline">Ver no glossário →</button></span></span><div style="font-weight:800;font-size:17px">{{drawer.autonomiaStr}}</div></div>
+            <div class="card" style="padding:12px;gap:2px"><span class="ev-tip" style="position:relative;display:inline-flex;font-size:10px;opacity:0.6;text-transform:uppercase;cursor:help;border-bottom:1px dotted var(--color-divider)">Potência<span class="ev-tip-pop" style="position:absolute;bottom:calc(100% + 8px);left:0;width:200px;background:#201e1d;color:#f8f4f4;font-size:11.5px;font-weight:400;text-transform:none;letter-spacing:normal;line-height:1.5;padding:10px 12px;box-shadow:var(--shadow-md);z-index:60;text-align:left">Potência máxima do motor elétrico, em cv.<button onClick="{{tipPotencia}}" style="display:block;margin-top:6px;background:none;border:none;padding:0;color:#ff9783;font-size:11px;cursor:pointer;text-decoration:underline">Ver no glossário →</button></span></span><div style="font-weight:800;font-size:17px">{{drawer.potenciaStr}}</div></div>
+            <div class="card" style="padding:12px;gap:2px"><span class="ev-tip" style="position:relative;display:inline-flex;font-size:10px;opacity:0.6;text-transform:uppercase;cursor:help;border-bottom:1px dotted var(--color-divider)">Porta-malas<span class="ev-tip-pop" style="position:absolute;bottom:calc(100% + 8px);right:0;width:200px;background:#201e1d;color:#f8f4f4;font-size:11.5px;font-weight:400;text-transform:none;letter-spacing:normal;line-height:1.5;padding:10px 12px;box-shadow:var(--shadow-md);z-index:60;text-align:left">Capacidade do porta-malas, em litros, com os bancos traseiros na posição normal.<button onClick="{{tipPortaMalas}}" style="display:block;margin-top:6px;background:none;border:none;padding:0;color:#ff9783;font-size:11px;cursor:pointer;text-decoration:underline">Ver no glossário →</button></span></span><div style="font-weight:800;font-size:17px">{{drawer.portaMalasStr}}</div></div>
+          </div>
+          <hr class="hr">
+          <div style="font-family:var(--font-heading);font-weight:800;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:10px">Custo em 5 anos</div>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:13.5px;margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between"><span>Energia</span><span>{{drawer.energiaStr}}</span></div>
+            <sc-if value="{{drawer.hasCombustivel}}" hint-placeholder-val="{{false}}">
+              <div style="display:flex;justify-content:space-between"><span>Combustível</span><span>{{drawer.combustivelStr}}</span></div>
+            </sc-if>
+            <div style="display:flex;justify-content:space-between"><span>Seguro</span><span>{{drawer.seguroStr}}</span></div>
+            <div style="display:flex;justify-content:space-between"><span>Manutenção</span><span>{{drawer.manutencaoStr}}</span></div>
+            <div style="display:flex;justify-content:space-between"><span>Revenda (recuperado){{drawer.revendaNote}}</span><span>−{{drawer.revendaStr}}</span></div>
+            <div style="display:flex;justify-content:space-between;font-weight:800;font-size:16px;padding-top:8px;border-top:2px solid var(--color-divider)"><span>{{custoLabel}}</span><span>{{drawer.liquidoStr}}</span></div>
+          </div>
+          <hr class="hr">
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;opacity:0.85;margin-bottom:16px">
+            <div style="display:flex;justify-content:space-between"><span>Latin NCAP</span><span>{{drawer.latinNcap}}</span></div>
+            <div style="display:flex;justify-content:space-between"><span>ADAS</span><span>{{drawer.adas}}</span></div>
+            <div style="display:flex;justify-content:space-between"><span>Airbags</span><span>{{drawer.airbags}}</span></div>
+            <div style="display:flex;justify-content:space-between"><span class="ev-tip" style="position:relative;display:inline-flex;cursor:help;border-bottom:1px dotted var(--color-divider)">Índice de adequação<span class="ev-tip-pop" style="position:absolute;bottom:calc(100% + 8px);left:0;width:220px;background:#201e1d;color:#f8f4f4;font-size:11.5px;font-weight:400;line-height:1.5;padding:10px 12px;box-shadow:var(--shadow-md);z-index:60;text-align:left">Nota de 0 a 100 que pondera custo, segurança, autonomia, rede, revenda, eficiência, espaço e conforto — relativa ao conjunto filtrado.<button onClick="{{tipIndice}}" style="display:block;margin-top:6px;background:none;border:none;padding:0;color:#ff9783;font-size:11px;cursor:pointer;text-decoration:underline">Ver no glossário →</button></span></span><span>{{drawer.indiceStr}}</span></div>
+          </div>
+          <a href="{{drawer.link}}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-block">Página oficial ↗</a>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <a href="{{drawer.yt1Href}}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="flex:1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14"></rect><path d="M10 9l6 3-6 3z" fill="currentColor" stroke="none"></path></svg>Vídeo 1
+            </a>
+            <a href="{{drawer.yt2Href}}" target="_blank" rel="noopener noreferrer" class="btn btn-secondary" style="flex:1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="5" width="20" height="14"></rect><path d="M10 9l6 3-6 3z" fill="currentColor" stroke="none"></path></svg>Vídeo 2
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = {
+    theme: 'light',
+    section: 'overview',
+    presentation: false,
+    search: '',
+    filters: { marcas: [], priceMin: 110000, priceMax: 190000, autonomiaMin: 250, latinNcapOnly: false, adasOnly: false, origens: [], sortBy: 'liquido' },
+    compareSelected: [],
+    drawerId: null,
+    carouselIdx: {},
+    glossarySearch: '',
+    glossaryCategory: null,
+    premissas: { kmAno: 9000, anos: 5, precoKwh: 2.30, fatorPerda: 1.05, seguroAno1: 0.035, seguroQueda: 0.005, cenario: 'base', emplacamento: 0, precoGasolina: 6.30 },
+    chartSegmentsOff: {},
+    weightsOpen: false,
+    weights: {
+      p1:{ name:'Pessoa 1', w:{tco:30,seg:20,aut:12,rede:10,rev:10,efi:8,esp:5,conf:5} },
+      p2:{ name:'Pessoa 2', w:{tco:30,seg:20,aut:12,rede:10,rev:10,efi:8,esp:5,conf:5} },
+      p3:{ name:'Pessoa 3', w:{tco:30,seg:20,aut:12,rede:10,rev:10,efi:8,esp:5,conf:5} },
+      p4:{ name:'Pessoa 4', w:{tco:30,seg:20,aut:12,rede:10,rev:10,efi:8,esp:5,conf:5} }
+    },
+    snackbar: null,
+    sensRefId: 'ex2_max',
+    sensLinesOff: {},
+    includeRevenda: true,
+    compareExpanded: false,
+    financing: { selectedIds: ['ora03'], entradaPct: 60, prazoMeses: 24, bonusAlt: 20000, taxaRecusa: 1.46 },
+    context: { papel: 'segundo', idade: '18-25', recarga: 'publica' }
+  };
+
+  GLOSSARY_TERMS = [
+    { termo:'TCO', sigla:'TCO', categoria:'Financeiro', definicao:'Total Cost of Ownership — custo total de propriedade. Neste dashboard é o "Custo líquido": preço mais energia, seguro e manutenção ao longo do período, menos o valor recuperado na revenda.' },
+    { termo:'BEV', sigla:'BEV', categoria:'Técnico', definicao:'Battery Electric Vehicle — carro 100% elétrico, movido só a bateria, sem motor a combustão.' },
+    { termo:'ADAS', sigla:'ADAS', categoria:'Segurança', definicao:'Advanced Driver Assistance Systems — sistemas avançados de assistência ao motorista, como frenagem automática de emergência, alerta de saída de faixa e piloto adaptativo.' },
+    { termo:'ACC', sigla:'ACC', categoria:'Segurança', definicao:'Adaptive Cruise Control — piloto automático adaptativo, que mantém distância do carro da frente ajustando a velocidade sozinho.' },
+    { termo:'Latin NCAP', sigla:'', categoria:'Segurança', definicao:'Programa independente de testes de colisão para o mercado latino-americano. Resultado em estrelas (0 a 5); "não testado" significa que o modelo não passou pelo programa, não que seja inseguro.' },
+    { termo:'Preço de tabela', sigla:'', categoria:'Financeiro', definicao:'Preço sugerido pela montadora em 09/08/2026, sem emplacamento, acessórios ou bônus promocionais.' },
+    { termo:'R$/km', sigla:'', categoria:'Financeiro', definicao:'Custo líquido em 5 anos dividido pela quilometragem total rodada no período — o jeito mais direto de comparar carros com preços e usos diferentes.' },
+    { termo:'R$/mês', sigla:'', categoria:'Financeiro', definicao:'Custo líquido em 5 anos dividido pelo número de meses de posse.' },
+    { termo:'Autonomia', sigla:'', categoria:'Técnico', definicao:'Distância que o carro percorre com a bateria cheia, segundo o ciclo de homologação declarado pelo fabricante — na prática varia com clima, velocidade e uso do ar-condicionado.' },
+    { termo:'Consumo', sigla:'', categoria:'Técnico', definicao:'Energia gasta a cada 100 km rodados, em kWh/100km. Quanto menor, mais eficiente o carro.' },
+    { termo:'Porta-malas', sigla:'', categoria:'Técnico', definicao:'Capacidade do porta-malas em litros, com os bancos traseiros na posição normal.' },
+    { termo:'Airbags', sigla:'', categoria:'Segurança', definicao:'Número de bolsas infláveis de proteção contra impacto instaladas de série no veículo.' },
+    { termo:'Potência', sigla:'', categoria:'Técnico', definicao:'Potência máxima do motor elétrico, em cv (cavalos). Não entra no cálculo de custo, mas indica desempenho.' },
+    { termo:'Revenda', sigla:'', categoria:'Financeiro', definicao:'Percentual do preço de tabela que o modelo deve recuperar na venda ao fim do período, calibrado por FIPE e pelo índice IBV Auto. O cenário "base" é o usado nas contas padrão do dashboard.' },
+    { termo:'Índice de adequação', sigla:'', categoria:'Financeiro', definicao:'Nota de 0 a 100 que combina custo (30%), segurança (20%), autonomia (12%), rede de recarga (10%), revenda (10%), eficiência (8%), espaço (5%) e conforto (5%). É relativa ao conjunto de modelos visível após os filtros.' },
+    { termo:'Nacional / Importado', sigla:'', categoria:'Regulatório', definicao:'Origem de fabricação do veículo. Não afeta diretamente o cálculo de custo, mas pode influenciar prazo de entrega e disponibilidade de peças.' },
+    { termo:'Segundo carro', sigla:'', categoria:'Regulatório', definicao:'Premissa de uso deste dashboard: o elétrico é o segundo veículo da família, com rodagem menor (9.000 km/ano) e sem recarga em casa.' },
+    { termo:'PHEV', sigla:'PHEV', categoria:'Técnico', definicao:'Plug-in Hybrid Electric Vehicle — híbrido com tomada: tem bateria e motor elétrico para uma autonomia elétrica curta, mais motor a combustão para o resto. Sem recarga em casa, roda quase sempre a combustão.' },
+    { termo:'HEV', sigla:'HEV', categoria:'Técnico', definicao:'Hybrid Electric Vehicle — híbrido comum, sem tomada. A bateria carrega só por frenagem regenerativa e pelo próprio motor a combustão.' },
+    { termo:'Combustível', sigla:'', categoria:'Financeiro', definicao:'Custo de gasolina/etanol em 5 anos para modelos PHEV e HEV, com base no consumo em km/l e no preço do combustível. Somado à energia elétrica (quando houver) para compor o "Consumo" e o critério de eficiência do índice.' }
+  ];
+
+  PREMISSAS_DEFAULT = { kmAno: 9000, anos: 5, precoKwh: 2.30, fatorPerda: 1.05, seguroAno1: 0.035, seguroQueda: 0.005, cenario: 'base', emplacamento: 0, precoGasolina: 6.30 };
+
+  CUSTO_KM = [
+    { cenario:'BEV com wallbox em casa a R$ 1,00/kWh', rsKm:0.162, nota:'Indisponível — condomínio não autoriza', destaque:'ref' },
+    { cenario:'BEV BYD (Dolphin GS) — rede pública com 15% de desconto Shell', rsKm:0.317, nota:'Benefício exclusivo de proprietários BYD' },
+    { cenario:'BEV eficiente (Geely EX2) — rede pública', rsKm:0.329, nota:'Melhor caso entre os importados' },
+    { cenario:'PHEV como híbrido, 18 km/L gasolina', rsKm:0.350, nota:'Sem recarga, o PHEV vira híbrido comum' },
+    { cenario:'PHEV flex, 12,5 km/L etanol', rsKm:0.352, nota:'Depende do preço do etanol em PE' },
+    { cenario:'BEV BYD (Dolphin GS) — rede pública sem desconto', rsKm:0.373, nota:'Se o benefício não for ativado no app' },
+    { cenario:'BEV GWM ORA 5 — rede pública', rsKm:0.403, nota:'Bateria maior, consumo maior' },
+    { cenario:'PHEV como híbrido, 15 km/L gasolina', rsKm:0.420, nota:'Cenário urbano mais realista' },
+    { cenario:'BEV GWM ORA 03 BEV58 — rede pública', rsKm:0.445, nota:'Mais caro que um PHEV a gasolina', destaque:'alerta' },
+    { cenario:'Carro a combustão, 12 km/L gasolina', rsKm:0.525, nota:'Referência de comparação' }
+  ];
+
+  // Cole 5 URLs públicas por modelo aqui (carrossel) — o usuário ainda pode arrastar sua própria imagem por cima de cada slide.
+  FOTOS = {
+    dolphin_mini:[
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiV82YtMpVqPkzRQDO6X8ZhFfIsjp_NaYEdfkqCuSrraq-B8H5xriLTlW0cEECoAfxXaHimaT6UO6VOUqoFzQ75X_-4Ty2Vj_mxiuMK4m_o8cy4a2qLMMvgVMRxkOXahiNJz3oTkVkabueGVlcZXdqxU8eaY2epRJ7HbUJr7w_l875UTLFhS_u_8VmYCXkH/s2560/BYD-Dolphin-MINI%20(58).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgVGA1zcueMwRgYBVX8TLUcSAgcLEqyFIijeOoMXeHTyyfGXuYGYutQVuY4Vhpy4d_ZFTpwE7b2RsW1GbpH_vx5Im27H0Gv8r5VEBiM-4Lw2pmhAC1-bRUKqBHhNNkCxrs92PNs67PzI_Gks-ZAVoFBgmAKLtWeW-2l2Rgxi9pGifgxZx7zZDafCdhq7ptu/s2560/BYD-Dolphin-MINI%20(109).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEi1lQs8mRq2gcDQoH5YeUngWq-xIXnlGaMZ4XwD1PT7IJeYGR9Wrv4ue7u3ODJH7-kl1LxMXP8A0aMWv_c0nEKH18oth7iAVrWXvu4SuetZxv7tl47h7uS8WJDxDmhgTY4B5njLJGfEQUdOpjRUv0Q_DfG27g8aneGVstC1n4MVtZtAbKI86wFQEx9mc20o/s2560/BYD-Dolphin-MINI%20(76).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiCL_MXd5VbUMShQKDi4oQi4vPEo5Oztxc4t_-XXoUulZJklXcK5N3Q_6Z6JhvVgjgLGrQ3iiTpHfd9__YiFxcLoVhsOEErknJWQjF5F5uraL-qnf589DG9iyOvp81QgGjmpoHO45Wc-BrmQm9FG2acd7CIYxBS5WF7R_vgTnapU2i93R9cIJF_uwMoBifM/s2560/BYD-Dolphin-MINI%20(78).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg2jxv_1SNqSy-1eaK06fy4J0_tEu8k5vWJkNcVMXyo1B5UCsWGYI5AjihI63ufPHQZ3Hx3jFd-ICwTO41Vra58nxd5TzUIY83ZrCi1XJb9BN7tIBO2i6g7kvxDMUANKj2iYIy3hSLw4gpmkjkAxlkZDwlG9mTmUwQcUAyWxRt7LLptC8LIR2-aoxwaEQIh/s2560/BYD-Dolphin-MINI%20(105).jpg'
+    ],
+    ex2_pro:[
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVYLVJWx7XCl8xPZCHvy4pAQaLIHTpBH_Dr-dTF6lXmhZj7Jp2pyLzdcsrlzy0G-GCzVtajMQulyyH6fc9-iqcyu2GbhyuyuG_f8nrpyr9AKnNZVMAiuTkldeM08N_hmoFXxptfSPAKxALsPYzH8m1304GFqMDEYa34rzWziffDRqTL0JEqXDhhSiQPpYm/s2366/Geely-EX2-Max-2026%20(26).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9faE32pmcpec4xNCjAUJeNTZHXNt0iyVLUKRVfl2l0OiCSHTm89ihbm4_oceBRWdT_XvcXA_-8G0nUKFesoIVjLKIF5vdxvqBqznfgY7fNdxTgxXhIdGeycfMBh_uLFspJUS20-i5Rc2iDOH0GWvxMxeh8IYvbaYUpZ-WdfW50GpNxlTNkYUR1sp_ubxG/s2375/Geely-EX2-Max%20(40).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh4A28F_op6_CjcK3GueKMhzS9vlP6D1U4Tzqjn0TNHuTetfzun2Yq1baP2K_XHth7ksDqXste0uDJ18FFPstg6RYz7oRHAjQnSwFzFT7fJqeiHqJSlHPlBlIpnKwWEAfMXGBynDQWVr9EwdbLThQ-ZSk7l4Dcg-oJ_oSpbtE3dvZxuA1u5AIMKouBEtf5b/s2560/Geely-EX2-Max-2026%20(21).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZmwmqaEhlYU4yQ2iyHT0M68E4WUPCwXOpCBazGLuwLmZBrJZiJXK8QJMgUZGTC2T0y1-v-FlrUrym-tbQ4wCagSMkqiGMQjzeKMpavmsDGPMgx-m2-oQhK0g6hkoqI5NhVZ0Gnm_en__g6bljXAKe40MaPD-ij-eD811VPLK4XGcUPbFlJ8kY95ANO5Xs/s2560/Geely-EX2-Max%20(52).jpg',
+      'https://static.autodromo.com.br/uploads/8aab83a5-c041-4fa6-9440-b6c458ee1f1b_laGEE002725_ImagensSite_desktop_1920x756px_Design_01.webp'
+    ],
+    mg4_c43:[
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/banner.jpg',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/img11.jpg',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/img02.jpg',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/img03.jpg',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/img04.jpg'
+    ],
+    ex2_max:[
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEg9faE32pmcpec4xNCjAUJeNTZHXNt0iyVLUKRVfl2l0OiCSHTm89ihbm4_oceBRWdT_XvcXA_-8G0nUKFesoIVjLKIF5vdxvqBqznfgY7fNdxTgxXhIdGeycfMBh_uLFspJUS20-i5Rc2iDOH0GWvxMxeh8IYvbaYUpZ-WdfW50GpNxlTNkYUR1sp_ubxG/s2375/Geely-EX2-Max%20(40).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh4A28F_op6_CjcK3GueKMhzS9vlP6D1U4Tzqjn0TNHuTetfzun2Yq1baP2K_XHth7ksDqXste0uDJ18FFPstg6RYz7oRHAjQnSwFzFT7fJqeiHqJSlHPlBlIpnKwWEAfMXGBynDQWVr9EwdbLThQ-ZSk7l4Dcg-oJ_oSpbtE3dvZxuA1u5AIMKouBEtf5b/s2560/Geely-EX2-Max-2026%20(21).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZmwmqaEhlYU4yQ2iyHT0M68E4WUPCwXOpCBazGLuwLmZBrJZiJXK8QJMgUZGTC2T0y1-v-FlrUrym-tbQ4wCagSMkqiGMQjzeKMpavmsDGPMgx-m2-oQhK0g6hkoqI5NhVZ0Gnm_en__g6bljXAKe40MaPD-ij-eD811VPLK4XGcUPbFlJ8kY95ANO5Xs/s2560/Geely-EX2-Max%20(52).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgSkh7ni5HvH26GlsxE4HdCO2xFoSGGIyzvDzLDBXRma03Wo4VK5pcXCcbYSqKzSTYuuqTVxeIdqv4Y4TApL9_SjAMK4U8oEcBmFfgUBp7-YCIqdgM5MkPi6CM3yq0yL3QXV4yioTh-IEnExXxarCJmRWsarn5ZCXS9607_6JOfOY_xqJun_Oyg5vZVabpO/s2560/Geely-EX2-Max%20(43).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjg2xISgyeTToRLxpcR1OZfHzatXd_RNf2uCT9GGhAdfLZo84ag_rrq9VF6Yj01ptWY_6I8P9rGqSa-GdJVaqOE-S0XwYse2T7_BdKbITmENAjSejIdD6CNz5t34s6yFBqpQCPMBStepMz2HG0EAGWCOlay8q5LrdHtjG0nKRCA9RCIbT8ZgmlBcJbJMWgh/s2560/Geely-EX2-Max%20(34).jpg'
+    ],
+    mg4_l43:[
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/img13.png',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/banner.jpg',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/img05.jpg',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/img06.jpg',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/img09.jpg'
+    ],
+    dolphin_gs:[
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgl1NmeAZ6HSmZUWXU4lcHSscRhp6bOCNPK76LXbRIGQwR1LkJL757sgI4w-WezNJrga0bYvsRiXEwlgXIfMz5KR5dGhEtRwkt1QTbaZYOPQBn-1ZKUc46LYdUGY24ZmH9vTe6IVr1OoQA0mZa4c6SWNa6pq1PVwBBTNME82JmhW08UXh1p8Y1nV8_BPSi4/s2560/BYD-Dolphin-2026%20(40).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjoi7b8yYqErPZRUd09nI-ZTJRfhfotLrvuCx0oBoJk7RvWYbrawkVwwvxx2R7IyiWFGNoFTsvlC43bGObDQmf3xmIQ3h9iBcx3tmW02YT-mXZ39h9N-7xWle3MGLMa-oY0c0IKfKrd2BwzV7PkWeFlpyqegpb3B3s5aBn0vq292__cwVGOFd7MtSt-vlDH/s2560/BYD-Dolphin-2026%20(1).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgcJP0qyG0mVB7wNvPzqQuHMrxRnMaSwvs9lkGz5Sx2D41eKZ4biLMqYcRiYhb2D14pmQYomlHz5dJFM4SzE29SB15gHpITihY8pzxa3eiPlFemf8yGyqRI6uEnxg4lwSZtgyCqeC-12aB2w0ysfnjAJOI_Y0GmS-cSBPFS1QbDsh9lVmVP19lvsW4z2W4R/s2560/BYD-Dolphin-2026%20(31).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhFJNa1HOrhajkFSYs4F0iPuekYpNmPWkx_g9IqTX3fJmEimVxARzy3ul4XGQ-rGaPXYw_JmzR4joQFxJvfglCOkS1tZlCy9jLoaLqKdsc6Kf_gLvNATGTQvzFUESqa34Gf9OGqX4cMi4CikAQxsXVOaetdbSSpcHL1IvNVu4IkXSvw0NODLsWCPMxSAc3z/s2560/RDUR7969.jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjHCm4YGduedkX_rTrIjg8MJYsHpSQI5lUIfMebAUEo2pUn-FUoOW08OE6ZvrKBTrF_X-4kEPc00FS8XhLRSx136Cz6qP6qSlcXM4KqkKzUFbaDTukMB9J1jH7FU1i0NbX_5kJYzXedU5VIfzs2oslgA1MIa-65GObfidqcfpUIhwfjzi_JsOskCZXgq9cU/s2560/BYD-Dolphin-2026%20(20).jpg'
+    ],
+    mg4_l54:[
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/img12.jpg',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/banner.jpg',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/interior-04.jpg',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/img-contact-form.jpg',
+      'https://mgmotoroficial.com.br/imagens/new-mg4-urban/img09.jpg'
+    ],
+    ora5:[
+      'https://www.gwmmotors.com.br/content/dam/gwm/pages/br/pt/media-center/modelos/ora-5/principal-ora5%20(1).jpg',
+      'https://www.gwmmotors.com.br/content/dam/gwm/pages/br/pt/media-center/modelos/ora-5/1.jpg',
+      'https://www.gwmmotors.com.br/content/dam/gwm/pages/br/pt/media-center/modelos/ora-5/2.jpg',
+      'https://www.gwmmotors.com.br/content/dam/gwm/pages/br/pt/media-center/modelos/ora-5/3.jpg',
+      'https://www.gwmmotors.com.br/content/dam/gwm/pages/br/pt/media-center/modelos/ora-5/4.jpg'
+    ],
+    dolphin_se:[
+      'https://canalve.com.br/wp-content/uploads/2026/04/BYD_YuanPlus_DolphinSE0001.jpg',
+      'https://canalve.com.br/wp-content/uploads/2026/04/2.jpg',
+      'https://canalve.com.br/wp-content/uploads/2026/04/3.jpg',
+      'https://www.byd.com/material/byd-site/br/home/home-2025/2025-seo/thumbs/thumb-byd-dolphin.jpg',
+      ''
+    ],
+    ora03:[
+      'https://www.gwmmotors.com.br/content/dam/gwm/pages/br/pt/media-center/modelos/ora-03-bev58/principal-ora-bev58.jpg',
+      'https://www.gwmmotors.com.br/content/dam/gwm/pages/br/pt/media-center/modelos/ora-03-bev58/1.jpg',
+      'https://www.gwmmotors.com.br/content/dam/gwm/pages/br/pt/media-center/news/2025/novas-cores-bev58/principal-ora.jpg',
+      'https://www.gwmmotors.com.br/content/dam/gwm/pages/br/pt/media-center/modelos/ora-03-bev58/novas-cores/galeria-ora.jpg',
+      'https://www.gwmmotors.com.br/content/dam/gwm/pages/br/pt/media-center/modelos/ora-03-bev58/novas-cores/10.jpg'
+    ],
+    b10:[
+      'https://stellantis3.dam-broadcast.com/medias/domain12808/media110214/3064401-ng77xss8kc-whr.jpg',
+      'https://stellantis3.dam-broadcast.com/medias/domain12808/media110214/3064404-m816lrj6n0-whr.jpg',
+      'https://stellantis3.dam-broadcast.com/medias/domain12808/media110214/3064407-fdj2n7mijp-whr.jpg',
+      'https://stellantis3.dam-broadcast.com/medias/domain12808/media110214/3064410-gua2ugg57h-whr.jpg',
+      'https://stellantis3.dam-broadcast.com/medias/domain12808/media110214/3064413-emvf18ba3c-whr.jpg'
+    ],
+    atto2:[
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiL1JhOdq6BY6IgSWKHJpM6bO5UlxFYi1bfswuVooISHwtorIyjgFOMCBXuOy8bH2VSeXH-PCmqSKgHamYvUaH1mHM6Vk0-pKlcIeuBaD4n_77nWWPQA04o6iAtAUef6ipF4c9cQPEBp_DxIslngYjERxzPCqrkodTkmf5vUm8u2AWE1_138LxeXn0F0M9R/s2560/BYD-Atto-2-Hibrido-Flex-Brasil%20(3).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhnT3VEauCrPR6aFd_IVDx18RJsOqnjhxHA4_0T_6R5kyQmDHsSVkiAtqZwYhnpxraQeuS_vSyU47I6sz3bJxZH4TYK9EmBUJr7gN2GSW6zODP9dkXKs_caiK5Z3ECCEhRpVVYyecmAupqw_pDcmfngAB9GNO2rJwuDoGykTg8NUkd4HXRBC8bFdDvrLrp-/s2560/BYD-Atto-2-Hibrido-Flex-Brasil%20(28).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhfdGZ92eQ9aaoHaLmlvS1Aaduy7ln77YkYV_a5FCgPi2apd2ApJEixkYoPMN7eJ2_ZzrTj_O5A7aXOf0hyNsQuJde6GJCB7XRpDlpJolrrN83_4YQtQ_lna-gHXGSdaM3T9wRefayXNmdPYVLSCoGv3LrEIZ3BBCKs6uSOZRXT4NnQQAT4j1zKdFKhVwoc/s2560/BYD-Atto-2-hibrido-detalhes%20(4).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEglcpNOWWzzivxVor_IazV8OVStt2qkhzxLFqvQtRDW6cYcvvSKbmCZWKv_rNH-UAOcFvs1tewmhA9O59yH0SYTV53Qs81f_8_0ITYb7BWAiGb1PI6sjX6Yolkfz3Y3Pa5Ev396xODnArYtHnWFpumgIJ_GAe_JHucC22wtujemfKQiNGwTp_KTzh4DYeiQ/s2560/BYD-Atto-2-Hibrido-Flex-Brasil%20(52).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiY-YqTQkE97ojhgHOk9i8S6oLAklbilSpoZZYF86BeyIQo9NTCP4ucmfKJqkLkIJargLe2JFk0kWWekjxKcq2kUGK7eMtOKNMShquwDej8Rs5ehipt_w3lpZuBJt-3LKUMvNvWX83zUn1OOnrH11kZnLPggqXes3EKQd7kY4M5G0_cXyqkF0Vn-KbfRWC9/s2560/BYD-Atto-2-hibrido-detalhes%20(16).jpg'
+    ],
+    jaecoo7:[
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh53V8JZD-sfdbs3WCVKxrL-XrVUs8FVKdr3btcQs3dFf68HGwnrF43ejl81x93pfvrDmHRGHgEyiSIM-WnHQu_I-UEW46AMk0eBiD9Gyxr8EUtRXBETiXSigSodCGsax4wqPnLw4BFi7J-VrerfcLZc_6NfzvJBCahSFV8Yd6fUksxbpsCgqk2kHr_QbAm/s4353/J7_Elite_009.jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiSKs1K4IwA_BNz3hGAVRSlScepdtNY6sIHLi2epR4nS6cZA2NujeG4fujpJPgKEfHiCFsRoevZyCYg-ikXJgwqbpPihBHgSDCmwTKOf_0eza6SaZKM87f-r6z4BTVVT8uKT_nwtchI_rEt1BDO6plAmB_d0EyvGrSa6x_X9EU80H60HD4xerU53lZjH_SR/s3822/J7_Elite_015.jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgmdFuOb8SwoHgfhGNT_N_jZROa3ckUHDKZsee7BUIT5sJVp-zE6R4IoJs_oq8yj6EyiZAIpxEU0QutiaHLoWWWp8Hi0Ou4UJVjX7ENvWc3mK8O6KNHXaJFkAQyy6l5RYHJjbds2x-S3JCO6Vpn-JHS3Z9hT7J97rZsTv3kk80oL0ji-4ymNCJNpNphfngk/s7008/J7_Elite_028.jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZo2nZ-ickvFi5JaMGSrPDoekkGf_-8wpalHxNnsSGANNSxEC1X2jXMgczkF1B7VrYCNNWWg-y-a03aV1QJuAEY2Qmmzb3DQLujNXq1GJptSWqt5oedBDtj2rWZeTdyLPKgqp3p9U6J0-OHWt3MaOZL5rnF1mcm3ewop4Fyk2gBrHirJ-MsIcm6L26P6rv/s6595/J7_Elite_029.jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiVUSq170iWxjYUmokIhyPTHjc9Zy76k9khk2hscpt7ralrhbNgGBAUx_i_VYV7UIl1j0Abcy2_CfmmlEV_JjUaA3bNRTwL64L3UxyLy9hO7Dd3dCaLLNjFPP4dOASrsK04t1gTEQUzkM_Cdnj31hVDSO1qgY430S65pxixAlkJXdYMMzvnVDiY0CLQp5RZ/s7008/J7_Elite_026.jpg'
+    ],
+    songpro:[
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjg3lbrQvfrRlYTwtkc9v2v_VnhgYL6bvYS3VMS804RNzFL8ChzOY0CYUSkCMv7Ei2VfZXHprsUYD62sUTwioy4ait_SOp35ozg3cOg6qnSFkfAaDKyAb8HjZB_Tr_9MTjtEIvaIwue4nveVTLvd01wBGNV6AbSYTGzuFKVnoZa7d2Bs73o6QHPPYLA1_Ux/s2560/BYD-Song-Pro-Flex-2027-externo%20(10).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhwEvnHUcUJ49enzqe7uWnBNs2Nl4ywSY-3HFnm-kS23YmeqWWWCfbkeN3mDbtQ2e_c2Y56d8awEEuKPTERbd2ItrSMszNHRAvhvC6e4ZQ00h-wqmJ42UYIoGcKQRMsmU61_yKwrL2wLPU2o064VaIFtzvNSGDc2UCWOS6Rfd63fcJ-l-LdI2PZ9NQ4h5XX/s2560/BYD-Song-Pro-Flex-2027-externo%20(12).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEisMPtSHyVsex2sDrOAWChaOTYwWi3oO8SVM54U1YzM21ZSPNrhnh1vx5GJF-iRPK2rnK4TkgoQPpoVARH8ibye1dOpMpOipsUYIM2HXf16CNQqVVwJWu7oPZnWXo7im2x9uqaE4gbdQkQgXR3LyZqML26UvpWLekEZPaS3dyi_LbyVc-K93kc5JATdHWJg/s2560/BYD-Song-Pro-2027-flex-interior%20(12).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiMC7GQIfOJhl7K1mL-6h8hQwBx94IqWpeL7ryHBNeAbrSbzicBN8IafkSsNYLiglZIjRWz6MqUYDP5s_sUYnJ619uQcsi-TaP30nZqGxpGGXxiLVB06khUT1rT02FNQU3phswJmj1oPLZDmpLp3RBGaX0FbYsQZUSYDrRl4zAJJ4tPTYtlFsVbHoke5ITs/s2560/BYD-Song-Pro-Flex-2027-externo%20(4).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhA_VgzqGhQtFn2zpkqmvks_thW5idXXwC-hLtZPoIYCldtHJko_docq8lJ-erPCIrC_gyaVkBlp201Ij81d5zHtE3ExoRqdgZBpPDtMLUFRDqHedWjT21RGCVbKyTWhIVZXovJm3A_GZhe8Zf77oCR60N-oqXJUmL7osPexiSBxJ_44Y4Tx7alJOzfxQOI/s2560/BYD-Song-Pro-2027%20(10).jpg'
+    ],
+    omoda5:[
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiclpKilLN6Oib19gIw3R-j8dkvef1I4F7aqGkIoHlLiPDEmG3NhFABdxhYr4wwZAkXzcu2jjZ3zb9pXZO1K7I-IJk6KnPK6Oyh-dqaYku4cxIiWwMke3D0epFSxBCmNxmTm9mP2g0rmSpViciADzr5Jwn7R-da8y5qlxzO2so9yUm3r5-4-EI1J9ghz3Vu/s2560/Novo%20Omoda%205%20(20).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgOVSHTzAYIxGE-EzFTdSmR8NU8yPHde25D6s2Tpf2bHupKaYmtlxUQTrNPiUXfv1aq7WzUEzi5-LKtoBkzJRep0J2DY283o7Xj5nq8Xqf19UVqZZm7upMGET30BJryMx7FJ2SigowiiqiYlacaVqaJfbleIgwWjdlzsKzdFJmNpIpXZ-cY72eutoEI5swY/s2560/Novo%20Omoda%205%20(22).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgCZ0_SAB3cHKklnjUjy4JXpl4kgvl_Oy0iD2OFlwng7jcX74BekqT-lb6vuAJZtndMc5iEY2eJZjUT9vzAYaPn9t2RVm7IWkCBQmmJ1Iohsavy4b48l2EEquJgueGWXG8NOOnd9VRFk26Y6TH3WZjJYFFohVTlxIAnk1QcXtCnJpIo_FeQsVAcPoabcm6u/s2560/Novo%20Omoda%205%20(19).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjL2s1IDJPjR63yx3fN-nxfZOtDcHRtkVJ_mJ80Du82JCmDVkeTPLho6MNXK_Y9f_XSxyKuLvkqczLKuyFzuoLG_qyS3E8zG6YtocOv3YfVhfGmAt16bitrQl5R99W0KbqtHdVt5Xntp6fcuZ-p12vnBE1-0ALXPwFWg9Gv7t_RRvaH5-FTxPWhgXi9Ackl/s2560/Novo%20Omoda%205%20(9).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhjFCzeWx5wn2ciVPmmcdQf1R93qv5Ikl1tpNr7IeIN6mXQszFaS01r7urSvhMCtm_BOKBcnAuyTztfcMz9YfHrZ6M8UmoQJdJarpg-ExIBXENDa_Dm3DBzj7xr2jKVqFGw2EVi_0cqN0fdvZ4UKH_spTe9gtHi4xkNYJgYuf0gJOVFcuLLgczFOaACvVGW/s2560/Novo%20Omoda%205%20(10).jpg'
+    ],
+    tiggo7:[
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEip7UGQ_rvujE5w1LLQtGqP3WTkzvtoWT_ErhDyior2DiQM1dLZkD2UqUZttQj-YEUkw_v6cGG4J-WHfiHxmZNb00IJpyPSA6x5Olb4Kfyw5UojsLsunLI9Wmu7dn6I76yIkzkDAdk0bw7fISeseO-k3sqPCzK1KvjTNDdMapAECEmlc26RjTL9wSVmXm7-/s2560/Tiggo-7-PRO-Hybrid-2025%20(1).jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjjXg08XZTZjEXL43j0wUKToJY6j1ZSCB8DPVmLw5mzukq5A-dLEjo3uzcO6LKyMLJrxZWcdA4SFQR7PgGLvmmCm2q6HLCQzMFYLoDBLFz9DbFlXfDu0K6Kxqhe13ZSew_S7T7D99wQF8EjTyuO4F1AR0ddclRSOlcA_2kOfGdTQkouFgFTvnzotlIFnrka/s2048/08-Tiggo7%20RDUR0071.jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhCQGWDYYbf-mk8yVxjzQ_bZj6297aNNFPWXg_-PBLTdaDe0-Oah8JJ_savwy40o3Vx80PCFKSyLP0G00gszXNUbfLZyA6iZgzYqtHxBRV5KTJIqFQmv6Gz4sF1MWWcZbV5tjOSojI3Ry8rLdTBzSveJUWBB50bAXKro1gG0A5oBrOhR1RfSJx1yfZt0A3U/s2048/11-KV_TIGGO7PHEV2025_2.jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjeXTvnjb4it2AKXYcfts44nBO4szNrAI6qWJNXmRwegkzNHndBX1Qndp-xpWGGsZqPoDHJUpzx1ffiGvuBytRRG1nh9TgJc7y64LGYhOEEN5HRcNmP76L_XoUKVnkK0XCv1t9zXZMS_z5ik1WVfRliS_rCT-AIZTV7ZuB209Kpj1Dk0ucN_YWBaNfMDMKv/s2560/1-Tiggo7%20RDUR9220.jpg',
+      'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgd5f9P3hC_pEPKEDBVAr1TVN-kHXHaVDIKZkO7kgGZ5Ku5ju25wrj8d10UtXhwTnC0R-zDTR11ubcxpiqLFgKdODk4AIrmSRt1duLuYPDsi-q08sr4VcBUicFXUSEIT8xdCXUNL4zynCMzPqSGXQcSCLbCfGhiP7sfQapN88NAXPvi6VAz1LvG6BF5AmVc/s2560/Tiggo-7-PRO-Hybrid-2025%20(2).jpg'
+    ]
+  };
+  // Cole aqui os 2 links do YouTube de cada modelo (vídeos de avaliação).
+  YT_LINKS = {
+    dolphin_mini:['https://www.youtube.com/watch?v=lWvcjwT5sGE','https://www.youtube.com/watch?v=7Khfr8YyB0M'],
+    ex2_pro:['https://www.youtube.com/watch?v=HzL-Pkl4AT8','https://www.youtube.com/watch?v=5V0kXn_AlMk'],
+    mg4_c43:['https://www.youtube.com/watch?v=HAj8rtBf_NM','https://www.youtube.com/watch?v=X4nAj7SM9uI'],
+    ex2_max:['https://www.youtube.com/watch?v=2xTusXM5uXg','https://www.youtube.com/watch?v=eQ-uTHC2OdI'],
+    mg4_l43:['https://www.youtube.com/watch?v=6JFKyomNUqw','https://www.youtube.com/watch?v=HUioIzCcA0w'],
+    dolphin_gs:['https://www.youtube.com/watch?v=JZfyDsfbTN0','https://www.youtube.com/watch?v=a2LWv0Mp8vw'],
+    mg4_l54:['https://www.youtube.com/watch?v=iOdnLV552FU','https://www.youtube.com/watch?v=j_DghYtrWuQ'],
+    ora5:['https://www.youtube.com/watch?v=TcEpTAIuw_g','https://www.youtube.com/watch?v=qhpbIvHl5pA'],
+    dolphin_se:['https://www.youtube.com/watch?v=RZ0ISfM7Bk8','https://www.youtube.com/watch?v=f1U5za7N9-U'],
+    ora03:['https://www.youtube.com/watch?v=Lxyfmepe_kY','https://www.youtube.com/watch?v=jQ-OTIYbcS0'],
+    b10:['https://www.youtube.com/watch?v=BgSTz3qhGFg','https://www.youtube.com/watch?v=SCPRDUFRoNs'],
+    atto2:['https://www.youtube.com/watch?v=Vs4P6UdUfKA','https://www.youtube.com/watch?v=0A8ketYFrxg'],
+    jaecoo7:['https://www.youtube.com/watch?v=zsQepie0JEM','https://www.youtube.com/watch?v=F-NhEDADTDs'],
+    songpro:['https://www.youtube.com/watch?v=ueGY3Uo8UDw','https://www.youtube.com/watch?v=nSv22jJk66w'],
+    omoda5:['https://www.youtube.com/watch?v=vUARwNbbb5k','https://www.youtube.com/watch?v=3D7tSm7iIuc'],
+    tiggo7:['https://www.youtube.com/watch?v=jo6AmVs6Ya8','https://www.youtube.com/watch?v=3voDzC0fS2Q']
+  };
+
+  buildCarousel(id, prefix) {
+    const key = prefix + '-' + id;
+    const idx = this.state.carouselIdx[key] || 0;
+    const photos = this.FOTOS[id] || ['','','','',''];
+    const slides = photos.map((src,i) => ({ slotId: 'ev-'+key+'-'+i, src, hasSrc: !!src, noSrc: !src, num: i+1, display: idx===i ? 'block':'none' }));
+    const self = this;
+    return {
+      photoSlides: slides,
+      photoCounter: (idx+1) + '/5',
+      prevPhoto: () => self.setState(s => ({ carouselIdx: Object.assign({}, s.carouselIdx, { [key]: (idx-1+5)%5 }) })),
+      nextPhoto: () => self.setState(s => ({ carouselIdx: Object.assign({}, s.carouselIdx, { [key]: (idx+1)%5 }) }))
+    };
+  }
+
+  VEICULOS = [
+    { id:'dolphin_mini', nome:'BYD Dolphin Mini GS', marca:'BYD', tipo:'BEV', origem:'Nacional', preco:119990, bateria:38.88, autonomia:280, consumo:13.90, potencia:75, torque:180, aceleracao:14.9, tracao:'Dianteira', comprimento:3780, entreEixos:2500, portaMalas:230, airbags:6, latinNcap:'Não testado', adas:'Básico, sem ACC', acc:false, camera:'Ré', suspTras:'Torção', recargaDC:'—', v2l:true, tetoPan:false, estepe:false, descontoEnergia:0.15, revisoes:3320, pneus:2800, outros:1800, residual:{pess:0.36, base:0.45, otim:0.52}, notas:{seg:4.5, rede:9.5, conf:4.0}, link:'https://www.byd.com/br/car/dolphin-mini' },
+    { id:'ex2_pro', nome:'Geely EX2 Pro', marca:'Geely', tipo:'BEV', origem:'Importado', preco:123800, bateria:39.4, autonomia:289, consumo:13.63, potencia:116, torque:150, aceleracao:10.5, tracao:'Traseira', comprimento:4135, entreEixos:2650, portaMalas:375, frunk:70, airbags:6, latinNcap:'Não testado', adas:'Reduzido', acc:false, camera:'540°', suspTras:'Torção', recargaDC:'70 kW', v2l:true, tetoPan:false, estepe:false, descontoEnergia:0, revisoes:2305, pneus:3000, outros:1800, residual:{pess:0.32, base:0.41, otim:0.48}, notas:{seg:5.5, rede:7.5, conf:5.0}, link:'https://static.autoforce.com/plugins/files/clientes/geely-brasil/produtos/ws/Ficha_Tecnica_GEELY_EX2.pdf' },
+    { id:'mg4_c43', nome:'MG4 Urban Comfort 43', marca:'MG', tipo:'BEV', origem:'Importado', preco:129990, bateria:43.0, autonomia:299, consumo:14.38, potencia:150, torque:250, aceleracao:9.6, tracao:'Dianteira', comprimento:4280, entreEixos:2750, portaMalas:477, airbags:6, latinNcap:'Não testado', adas:'Completo', acc:true, camera:'360°', suspTras:'Torção', recargaDC:'82 kW · 10–80% em 28–30 min', v2l:null, tetoPan:false, estepe:false, descontoEnergia:0, revisoes:3800, pneus:3600, outros:1800, residual:{pess:0.30, base:0.38, otim:0.46}, notas:{seg:7.0, rede:6.5, conf:5.5}, link:'https://mgmotoroficial.com.br/model/mg4urban/' },
+    { id:'ex2_max', nome:'Geely EX2 Max', marca:'Geely', tipo:'BEV', origem:'Importado', preco:136800, bateria:39.4, autonomia:289, consumo:13.63, potencia:116, torque:150, aceleracao:10.2, tracao:'Traseira', comprimento:4135, entreEixos:2650, portaMalas:375, frunk:70, airbags:6, latinNcap:'Não testado', adas:'Completo', acc:true, camera:'540°', suspTras:'Torção', recargaDC:'70 kW', v2l:true, tetoPan:false, estepe:false, descontoEnergia:0, revisoes:2305, pneus:3000, outros:1800, residual:{pess:0.32, base:0.41, otim:0.48}, notas:{seg:7.0, rede:7.5, conf:7.0}, link:'https://static.autoforce.com/plugins/files/clientes/geely-brasil/produtos/ws/Ficha_Tecnica_GEELY_EX2.pdf' },
+    { id:'mg4_l43', nome:'MG4 Urban Luxury 43', marca:'MG', tipo:'BEV', origem:'Importado', preco:139990, bateria:43.0, autonomia:299, consumo:14.38, potencia:150, torque:250, aceleracao:9.6, tracao:'Dianteira', comprimento:4280, entreEixos:2750, portaMalas:477, airbags:6, latinNcap:'Não testado', adas:'Completo', acc:true, camera:'360°', suspTras:'Torção', recargaDC:'82 kW · 10–80% em 28–30 min', v2l:null, tetoPan:false, estepe:false, descontoEnergia:0, revisoes:3800, pneus:3600, outros:1800, residual:{pess:0.30, base:0.38, otim:0.46}, notas:{seg:7.5, rede:6.5, conf:7.0}, link:'https://mgmotoroficial.com.br/model/mg4urban/' },
+    { id:'dolphin_gs', nome:'BYD Dolphin GS', marca:'BYD', tipo:'BEV', origem:'Importado', preco:149990, bateria:44.9, autonomia:291, consumo:15.43, potencia:95, torque:180, aceleracao:10.9, tracao:'Dianteira', comprimento:4125, entreEixos:2700, portaMalas:250, airbags:6, latinNcap:'Não testado (o Dolphin Plus obteve 5 estrelas)', adas:'Parcial', acc:null, camera:'360°', suspTras:'Torção', recargaDC:'—', v2l:true, tetoPan:false, estepe:false, descontoEnergia:0.15, revisoes:3320, pneus:3200, outros:1800, residual:{pess:0.34, base:0.43, otim:0.50}, notas:{seg:6.5, rede:9.5, conf:6.5}, link:'https://www.byd.com/br/car/dolphin' },
+    { id:'mg4_l54', nome:'MG4 Urban Luxury 54', marca:'MG', tipo:'BEV', origem:'Importado', preco:149990, bateria:54.0, autonomia:358, consumo:15.08, potencia:160, torque:250, aceleracao:9.5, tracao:'Dianteira', comprimento:4280, entreEixos:2750, portaMalas:477, airbags:6, latinNcap:'Não testado', adas:'Completo — ACC, LKA, BSD, FCA, DMS, RCTA', acc:true, camera:'360°', suspTras:'Torção', recargaDC:'87 kW · 10–80% em 28–30 min', v2l:null, tetoPan:false, estepe:false, descontoEnergia:0, revisoes:3800, pneus:3600, outros:1800, residual:{pess:0.30, base:0.38, otim:0.46}, notas:{seg:7.5, rede:6.5, conf:8.0}, link:'https://mgmotoroficial.com.br/model/mg4urban/' },
+    { id:'ora5', nome:'GWM ORA 5', marca:'GWM', tipo:'BEV', origem:'Importado', preco:159900, bateria:58.3, autonomia:349, consumo:16.70, potencia:204, torque:260, aceleracao:7.7, tracao:'Dianteira', comprimento:4471, entreEixos:2720, portaMalas:362, airbags:6, latinNcap:'Não testado', adas:'Nível 2+', acc:true, camera:'540°', suspTras:'Multilink', recargaDC:'120 kW · 30–80% em ~20 min', v2l:true, tetoPan:true, estepe:false, descontoEnergia:0, revisoes:4200, pneus:4500, outros:1800, residual:{pess:0.30, base:0.38, otim:0.46}, notas:{seg:7.5, rede:8.0, conf:9.5}, link:'https://www.gwmmotors.com.br/pt/modelos/ora5' },
+    { id:'dolphin_se', nome:'BYD Dolphin SE', marca:'BYD', tipo:'BEV', origem:'Importado', preco:159990, bateria:45.12, autonomia:272, consumo:16.59, potencia:177, torque:290, aceleracao:8.0, tracao:'Dianteira', comprimento:4125, entreEixos:2700, portaMalas:250, airbags:6, latinNcap:'Não testado', adas:'Completo', acc:true, camera:'360°', suspTras:'Multilink', recargaDC:'80 kW · 30–80% em ~20 min', v2l:true, tetoPan:null, estepe:false, descontoEnergia:0.15, revisoes:3320, pneus:3200, outros:1800, residual:{pess:0.33, base:0.42, otim:0.49}, notas:{seg:7.0, rede:9.5, conf:8.5}, link:'https://www.byd.com/br/car/dolphin-se' },
+    { id:'ora03', nome:'GWM ORA 03 BEV58', marca:'GWM', tipo:'BEV', origem:'Importado', preco:169000, bateria:58.0, autonomia:315, consumo:18.41, potencia:171, torque:250, aceleracao:8.2, tracao:'Dianteira', comprimento:4235, entreEixos:2650, portaMalas:228, airbags:7, latinNcap:'5 estrelas (linha ORA 03)', adas:'Nível 2+', acc:true, camera:'360°', suspTras:'Torção', recargaDC:'—', v2l:true, tetoPan:true, estepe:false, descontoEnergia:0, revisoes:4200, pneus:3800, outros:1800, residual:{pess:0.27, base:0.34, otim:0.42}, notas:{seg:9.5, rede:8.0, conf:9.0}, obsComercial:'R$ 20.000 de bônus na nota OU taxa 0% — condições excludentes', link:'https://www.gwmmotors.com.br/pt/modelos/ora-03-bev58' },
+    { id:'b10', nome:'Leapmotor B10', marca:'Leapmotor', tipo:'BEV', origem:'Importado', preco:182990, bateria:56.2, autonomia:288, consumo:19.51, potencia:218, torque:240, aceleracao:8.0, tracao:'Traseira', comprimento:4515, entreEixos:2735, portaMalas:430, airbags:6, latinNcap:'Não testado', adas:'Avançado', acc:true, camera:'360°', suspTras:'Multilink', recargaDC:'140 kW · 30–80% em 16 min', v2l:null, tetoPan:true, estepe:false, descontoEnergia:0, revisoes:4500, pneus:4500, outros:1800, residual:{pess:0.26, base:0.33, otim:0.41}, notas:{seg:7.0, rede:5.5, conf:8.5}, obsComercial:'FIPE 2026 em R$ 158.985, abaixo do preço de tabela', link:'https://www.mobiauto.com.br/tabela-fipe/carros/leapmotor/b10' },
+    { id:'atto2', nome:'BYD Atto 2 DM-i Flex GL', marca:'BYD', tipo:'PHEV', origem:'Nacional', preco:149990, bateria:7.85, autonomia:1000, autonomiaEletrica:45, consumo:0, kmPorLitro:14.0, kmPorLitroEstimado:true, potencia:177, torque:300, aceleracao:8.5, tracao:'Dianteira', comprimento:4330, entreEixos:2620, portaMalas:455, airbags:6, latinNcap:'Não testado', adas:'ACC e AEB de série', acc:true, camera:'360°', suspTras:'Torção', recargaDC:'—', v2l:null, tetoPan:false, estepe:false, descontoEnergia:0, revisoes:4500, pneus:3000, outros:1800, residual:{pess:0.34, base:0.42, otim:0.49}, notas:{seg:7.0, rede:3.0, conf:6.5}, obsComercial:'PHEV, 45 km só no elétrico — sem recarga em casa, roda quase só a etanol/gasolina; elegível ao Programa Move Brasil por sair abaixo de R$150 mil', link:'https://www.byd.com/br' },
+    { id:'jaecoo7', nome:'Jaecoo 7 Elite', marca:'Jaecoo', tipo:'PHEV', origem:'Importado', preco:179990, bateria:18.3, autonomia:1200, autonomiaEletrica:79, consumo:0, kmPorLitro:13.0, kmPorLitroEstimado:true, potencia:279, torque:450, aceleracao:7.0, tracao:'Dianteira', comprimento:4500, entreEixos:2672, portaMalas:450, portaMalasEstimado:true, airbags:6, airbagsEstimado:true, latinNcap:'Não testado', adas:'AEB, alerta de colisão, LKA e ACC', acc:true, camera:'Ré com linhas dinâmicas', suspTras:'Não informado', recargaDC:'40 kW · 20–80% em ~20 min', v2l:null, tetoPan:false, estepe:false, descontoEnergia:0, revisoes:5500, pneus:3800, outros:1800, residual:{pess:0.28, base:0.36, otim:0.43}, notas:{seg:6.5, rede:3.0, conf:6.0}, obsComercial:'PHEV, 79 km só no elétrico — dados de peso, torque isolado e financiamento próprios da versão Elite ainda não confirmados pela marca', link:'https://www.jaecoo.com.br' },
+    { id:'songpro', nome:'BYD Song Pro Super-Híbrido Flex GL', marca:'BYD', tipo:'PHEV', origem:'Nacional', preco:176990, bateria:13.1, autonomia:1075, autonomiaEletrica:57, consumo:0, kmPorLitro:15.0, kmPorLitroEstimado:true, potencia:218, torque:300, aceleracao:8.8, tracao:'Dianteira', comprimento:4740, entreEixos:2710, portaMalas:530, airbags:6, latinNcap:'Não testado', adas:'ACC, AEB, LKA e reconhecimento de placas', acc:true, camera:'360°', suspTras:'Multilink', recargaDC:'—', v2l:true, tetoPan:false, estepe:false, descontoEnergia:0, revisoes:5000, pneus:3600, outros:1800, residual:{pess:0.34, base:0.42, otim:0.49}, notas:{seg:7.0, rede:3.0, conf:6.5}, obsComercial:'PHEV, 57 km só no elétrico — sem recarga em casa, roda quase só a etanol/gasolina', link:'https://www.byd.com/br' },
+    { id:'omoda5', nome:'Omoda 5 HEV Luxury', marca:'Omoda', tipo:'HEV', origem:'Importado', preco:159990, bateria:1.5, autonomia:900, autonomiaEletrica:0, consumo:0, kmPorLitro:14.15, potencia:224, torque:295, aceleracao:7.9, tracao:'Dianteira', comprimento:4447, entreEixos:2610, portaMalas:372, airbags:7, latinNcap:'Não testado', adas:'Básico, sem ACC confirmado', acc:false, camera:'360°', suspTras:'Multilink', recargaDC:'—', v2l:null, tetoPan:false, estepe:false, descontoEnergia:0, revisoes:4800, pneus:3400, outros:1800, residual:{pess:0.28, base:0.36, otim:0.43}, notas:{seg:6.0, rede:0, conf:7.0}, obsComercial:'HEV sem plugue nenhum — carrega só por frenagem regenerativa e pelo motor a combustão', link:'https://www.omoda-jaecoo.com.br' },
+    { id:'tiggo7', nome:'Chery Tiggo 7 Pro Hybrid Max Drive', marca:'Chery', tipo:'HEV', origem:'Nacional', preco:181990, bateria:1.0, autonomia:570, autonomiaEletrica:0, consumo:0, kmPorLitro:11.15, potencia:160, torque:250, aceleracao:9.7, tracao:'Dianteira', comprimento:4500, entreEixos:2670, portaMalas:475, portaMalasEstimado:true, airbags:6, latinNcap:'Não testado', adas:'AEB, LKA, ACC e monitoramento de ponto cego', acc:true, camera:'360°', suspTras:'Multilink', recargaDC:'—', v2l:null, tetoPan:true, estepe:false, descontoEnergia:0, revisoes:5200, pneus:3800, outros:1800, residual:{pess:0.32, base:0.40, otim:0.47}, notas:{seg:7.5, rede:0, conf:7.5}, obsComercial:'Híbrido leve 48V (BSG) sem plugue nenhum — porta-malas divergente entre fontes (330 L a 475 L)', link:'https://www.caoachery.com.br' }
+  ];
+
+  NAV_DEFS = [
+    { id:'overview', label:'Visão geral', iconD:'M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z' },
+    { id:'compare', label:'Comparar', iconD:'M4 20V9M12 20V4M20 20v-6' },
+    { id:'simulator', label:'Simulador', iconD:'M4 6h16M4 12h16M4 18h16' },
+    { id:'sensitivity', label:'Sensibilidade', iconD:'M3 17l5-7 4 4 5-9 4 6' },
+    { id:'spec', label:'Ficha técnica', iconD:'M6 3h8l5 5v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1ZM9 12h7M9 16h7' },
+    { id:'financing', label:'Formatos de compra', iconD:'M2 7h20v13a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1ZM2 7l2-4h16l2 4M6 14h4' },
+    { id:'glossary', label:'Glossário', iconD:'M12 6.5c-2-1.5-5-2-8-1.5V18c3-.6 6 0 8 1.5c2-1.5 5-2.1 8-1.5V5C17 4.5 14 5 12 6.5ZM12 6.5V19.5' },
+    { id:'sources', label:'Fontes', iconD:'M14 3h7v7M21 3l-9 9M19 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h6' }
+  ];
+
+  PLACEHOLDER = {
+    simulator: { title:'Simulador', desc:'Sliders de premissas e gráfico de barras empilhadas com recálculo ao vivo — chega na próxima rodada.' },
+    sensitivity: { title:'Sensibilidade', desc:'Gráficos de quilometragem, break-even de revenda e preço da recarga — chega na próxima rodada.' },
+    spec: { title:'Ficha técnica', desc:'Cards expansíveis com as ~25 linhas de atributo por modelo — chega na próxima rodada.' },
+    glossary: { title:'Glossário', desc:'Busca e definições de ACC, ADAS, BEV, TCO e demais siglas — chega na próxima rodada.' },
+    sources: { title:'Fontes', desc:'Tabela de fontes agrupadas com status de verificação — chega na próxima rodada.' }
+  };
+
+  brl(v) { return 'R$ ' + Math.round(v).toLocaleString('pt-BR'); }
+  brl2(v) { return 'R$ ' + v.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+
+  computeVehicle(v, overrideP) {
+    const P = overrideP || this.state.premissas;
+    const kmTotal = P.kmAno * P.anos;
+    const energia = (v.consumo/100) * kmTotal * P.fatorPerda * P.precoKwh * (1 - v.descontoEnergia);
+    const combustivel = v.kmPorLitro ? (kmTotal / v.kmPorLitro) * P.precoGasolina : 0;
+    const seguro = v.preco * (P.anos * P.seguroAno1 - P.seguroQueda * (P.anos-1) * P.anos / 2);
+    const manutencao = v.revisoes + v.pneus + v.outros;
+    const ipva = v.tipo === 'BEV' ? 0 : v.preco * 0.024 * 3.7;
+    const revenda = v.preco * v.residual[P.cenario];
+    const liquido = v.preco + P.emplacamento + energia + combustivel + seguro + manutencao + ipva - (this.state.includeRevenda ? revenda : 0);
+    const rsKm = liquido / kmTotal;
+    const rsMes = liquido / (P.anos * 12);
+    const efiCost = (energia + combustivel) / kmTotal;
+    return Object.assign({}, v, { energia, combustivel, seguro, manutencao, ipva, revenda, liquido, rsKm, rsMes, efiCost });
+  }
+
+  nz(x, lo, hi, inverter) {
+    if (hi === lo) return 5;
+    let val = (x - lo) / (hi - lo);
+    if (inverter) val = 1 - val;
+    return Math.max(0, Math.min(10, val * 10));
+  }
+
+  computeIndices(list) {
+    const metrics = [
+      { get:v=>v.liquido, inv:true, w:0.30 },
+      { get:v=>v.notas.seg, inv:false, w:0.20 },
+      { get:v=>v.autonomia, inv:false, w:0.12 },
+      { get:v=>v.notas.rede, inv:false, w:0.10 },
+      { get:v=>v.residual.base, inv:false, w:0.10 },
+      { get:v=>v.efiCost, inv:true, w:0.08 },
+      { get:v=>v.portaMalas, inv:false, w:0.05 },
+      { get:v=>v.notas.conf, inv:false, w:0.05 }
+    ];
+    const ranges = metrics.map(m => {
+      const vals = list.map(m.get);
+      return { lo: Math.min(...vals), hi: Math.max(...vals) };
+    });
+    const out = {};
+    list.forEach(v => {
+      let idx = 0;
+      metrics.forEach((m,i) => { idx += this.nz(m.get(v), ranges[i].lo, ranges[i].hi, m.inv) * m.w; });
+      out[v.id] = idx * 10;
+    });
+    return out;
+  }
+
+  bucketOf(v, arr, lowerBetter) {
+    const min = Math.min(...arr), max = Math.max(...arr);
+    if (max === min) return 2;
+    const frac = (v - min) / (max - min);
+    const goodness = lowerBetter ? 1 - frac : frac;
+    const severity = 1 - goodness;
+    return Math.min(4, Math.floor(severity * 5));
+  }
+
+  bucketBg(b) { return ['transparent','var(--ev-surface-2)','var(--color-neutral-200)','var(--color-accent-100)','var(--color-accent-300)'][b]; }
+  bucketFg(b) { return ['inherit','inherit','inherit','var(--color-accent-800)','var(--color-accent-900)'][b]; }
+
+  medianOf(arr) {
+    const s = [...arr].sort((a,b)=>a-b);
+    const mid = Math.floor(s.length/2);
+    return s.length % 2 ? s[mid] : (s[mid-1]+s[mid])/2;
+  }
+
+  setFilter(patch) { this.setState(s => ({ filters: Object.assign({}, s.filters, patch) })); }
+  toggleInArr(list, val) { return list.includes(val) ? list.filter(x=>x!==val) : [...list, val]; }
+
+  clearFilters() {
+    this.setState({ filters: { marcas:[], priceMin:110000, priceMax:190000, autonomiaMin:250, latinNcapOnly:false, adasOnly:false, origens:[], sortBy:'liquido' } });
+  }
+
+  toggleCompare(id) {
+    this.setState(s => {
+      const has = s.compareSelected.includes(id);
+      if (has) return { compareSelected: s.compareSelected.filter(x=>x!==id) };
+      if (s.compareSelected.length >= 3) return s;
+      return { compareSelected: [...s.compareSelected, id] };
+    });
+  }
+
+  AGE_BASE = { '18-25':0.035, '26-35':0.028, '36-55':0.023, '56+':0.020 };
+  ROLE_MULT = { unico:1.10, segundo:1.00, terceiro:0.90 };
+  RECARGA_OPTS = { publica:{precoKwh:2.30, fatorPerda:1.05}, tomada:{precoKwh:0.95, fatorPerda:1.02}, wallbox:{precoKwh:0.85, fatorPerda:1.01} };
+
+  setContextPapel(papel) { this.setState(s => ({ context: Object.assign({}, s.context, {papel}), premissas: Object.assign({}, s.premissas, { seguroAno1: this.AGE_BASE[s.context.idade] * this.ROLE_MULT[papel] }) })); }
+  setContextIdade(idade) { this.setState(s => ({ context: Object.assign({}, s.context, {idade}), premissas: Object.assign({}, s.premissas, { seguroAno1: this.AGE_BASE[idade] * this.ROLE_MULT[s.context.papel] }) })); }
+  setContextKmAno(km) { this.setState(s => ({ premissas: Object.assign({}, s.premissas, { kmAno: km }) })); }
+  setContextRecarga(key) { this.setState(s => ({ context: Object.assign({}, s.context, {recarga:key}), premissas: Object.assign({}, s.premissas, this.RECARGA_OPTS[key]) })); }
+
+  computeWinnerId(P) {
+    const all = this.VEICULOS.map(v => this.computeVehicle(v, P));
+    return all.reduce((b,v) => v.liquido<b.liquido ? v : b).id;
+  }
+  nameOf(id) { const v = this.VEICULOS.find(x=>x.id===id); return v ? v.nome : id; }
+
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.premissas !== this.state.premissas) {
+      const prevWinner = this.computeWinnerId(prevState.premissas);
+      const curWinner = this.computeWinnerId(this.state.premissas);
+      if (prevWinner !== curWinner) {
+        clearTimeout(this._snackTimer);
+        const name = this.nameOf(curWinner);
+        this.setState({ snackbar: 'Com estes parâmetros, o líder passa a ser ' + name + '.' });
+        this._snackTimer = setTimeout(() => this.setState({ snackbar: null }), 4000);
+      }
+    }
+  }
+
+  buildSimulador(all) {
+    const self = this;
+    const P = this.state.premissas;
+    const setP = (patch) => self.setState(s => ({ premissas: Object.assign({}, s.premissas, patch) }));
+
+    const anosOpts = [3,4,5,6].map(n => ({ label:String(n), checked: P.anos===n, onClick: () => setP({ anos:n }) }));
+    const cenarioOpts = [{k:'pess',l:'Pessimista'},{k:'base',l:'Base'},{k:'otim',l:'Otimista'}].map(o => ({ label:o.l, checked:P.cenario===o.k, onClick: () => setP({ cenario:o.k }) }));
+
+    const SEGMENT_DEFS = [
+      { key:'preco', label:'Preço', color:'var(--color-neutral-400)' },
+      { key:'energia', label:'Energia', color:'var(--color-accent-300)' },
+      { key:'combustivel', label:'Combustível', color:'#8a5a1f' },
+      { key:'seguro', label:'Seguro', color:'var(--color-accent-500)' },
+      { key:'manutencao', label:'Manutenção', color:'var(--color-accent-700)' },
+      { key:'revenda', label:'Revenda (recuperado)', color:'var(--color-neutral-600)' }
+    ];
+    const off = this.state.chartSegmentsOff;
+    const legend = SEGMENT_DEFS.filter(sgd => sgd.key!=='revenda' || this.state.includeRevenda).map(sgd => ({
+      label:sgd.label, color:sgd.color, opacity: off[sgd.key] ? 0.35 : 1,
+      onClick: () => self.setState(s => ({ chartSegmentsOff: Object.assign({}, s.chartSegmentsOff, { [sgd.key]: !s.chartSegmentsOff[sgd.key] }) }))
+    }));
+
+    const sorted = [...all].sort((a,b)=>a.liquido-b.liquido);
+    const maxTotal = Math.max(...sorted.map(v => v.preco+v.energia+v.combustivel+v.seguro+v.manutencao));
+    const bars = sorted.map(v => {
+      const vals = { preco:v.preco, energia:v.energia, combustivel:v.combustivel, seguro:v.seguro, manutencao:v.manutencao, revenda:v.revenda };
+      const segments = SEGMENT_DEFS.filter(sgd => !off[sgd.key] && (sgd.key!=='revenda' || self.state.includeRevenda)).map(sgd => ({
+        pct: (vals[sgd.key]/maxTotal*100).toFixed(2), color: sgd.color, title: sgd.label+': '+self.brl(vals[sgd.key])
+      }));
+      return { nome:v.nome, liquidoStr: self.brl(v.liquido), segments };
+    });
+
+    const winner = sorted[0], second = sorted[1], last = sorted[sorted.length-1];
+
+    const METRICS = [
+      {key:'tco', label:'Custo'}, {key:'seg', label:'Segurança'}, {key:'aut', label:'Autonomia'},
+      {key:'rede', label:'Rede'}, {key:'rev', label:'Revenda'}, {key:'efi', label:'Eficiência'},
+      {key:'esp', label:'Espaço'}, {key:'conf', label:'Conforto'}
+    ];
+    const getters = { tco:v=>v.liquido, seg:v=>v.notas.seg, aut:v=>v.autonomia, rede:v=>v.notas.rede, rev:v=>v.residual.base, efi:v=>v.efiCost, esp:v=>v.portaMalas, conf:v=>v.notas.conf };
+    const inverters = { tco:true, efi:true };
+    const ranges = {};
+    METRICS.forEach(m => { const vals = all.map(getters[m.key]); ranges[m.key] = { lo:Math.min(...vals), hi:Math.max(...vals) }; });
+
+    const weights = this.state.weights;
+    const peopleKeys = ['p1','p2','p3','p4'];
+    const personalScores = {};
+    const people = peopleKeys.map(pk => {
+      const person = weights[pk];
+      const total = METRICS.reduce((s,m)=>s+person.w[m.key],0) || 1;
+      const sliders = METRICS.map(m => ({
+        label:m.label, raw:person.w[m.key], pct:((person.w[m.key]/total)*100).toFixed(0),
+        onChange: (e) => self.setState(s => ({ weights: Object.assign({}, s.weights, { [pk]: Object.assign({}, s.weights[pk], { w: Object.assign({}, s.weights[pk].w, { [m.key]: Number(e.target.value) }) }) }) }))
+      }));
+      const scores = {};
+      all.forEach(v => {
+        let sc = 0;
+        METRICS.forEach(m => { const nota = self.nz(getters[m.key](v), ranges[m.key].lo, ranges[m.key].hi, !!inverters[m.key]); sc += nota * (person.w[m.key]/total); });
+        scores[v.id] = sc;
+      });
+      personalScores[pk] = scores;
+      const top3 = [...all].sort((a,b)=>scores[b.id]-scores[a.id]).slice(0,3).map(v=>v.nome.split(' ').slice(0,2).join(' ')).join(', ');
+      return {
+        name: person.name, top3, sliders,
+        onName: (e) => self.setState(s => ({ weights: Object.assign({}, s.weights, { [pk]: Object.assign({}, s.weights[pk], { name: e.target.value }) }) }))
+      };
+    });
+
+    const consensusScores = all.map(v => {
+      const avg = peopleKeys.reduce((s,pk)=>s+personalScores[pk][v.id],0)/4;
+      const ranks = peopleKeys.map(pk => [...all].sort((a,b)=>personalScores[pk][b.id]-personalScores[pk][a.id]).findIndex(x=>x.id===v.id)+1);
+      const spread = Math.max(...ranks)-Math.min(...ranks);
+      return { id:v.id, nome:v.nome, avg, spread };
+    }).sort((a,b)=>b.avg-a.avg);
+    const consensus = consensusScores.slice(0,8).map((c,i) => ({
+      rank:i+1, nome:c.nome,
+      spreadNote: c.spread>3 ? 'divergência entre pessoas: '+c.spread+' posições' : '',
+      bg: c.spread>3 ? 'var(--color-accent-100)' : 'transparent'
+    }));
+
+    return {
+      kmAno:P.kmAno, kmAnoLabel:P.kmAno.toLocaleString('pt-BR')+' km', setKmAno:(e)=>setP({ kmAno:Number(e.target.value) }),
+      anosOpts,
+      precoKwh:P.precoKwh, precoKwhLabel:'R$ '+P.precoKwh.toFixed(2).replace('.',',')+'/kWh', setPrecoKwh:(e)=>setP({ precoKwh:Number(e.target.value) }),
+      seguroAno1Pct:(P.seguroAno1*100).toFixed(1), seguroAno1Label:(P.seguroAno1*100).toFixed(1).replace('.',',')+'% do valor', setSeguroAno1:(e)=>setP({ seguroAno1:Number(e.target.value)/100 }),
+      seguroQuedaPct:(P.seguroQueda*100).toFixed(1), seguroQuedaLabel:(P.seguroQueda*100).toFixed(1).replace('.',',')+' p.p.', setSeguroQueda:(e)=>setP({ seguroQueda:Number(e.target.value)/100 }),
+      cenarioOpts,
+      fatorPerda:P.fatorPerda, fatorPerdaLabel:P.fatorPerda.toFixed(2), setFatorPerda:(e)=>setP({ fatorPerda:Number(e.target.value) }),
+      emplacamentoOn: P.emplacamento>0, toggleEmplacamento: () => setP({ emplacamento: P.emplacamento>0 ? 0 : 1500 }),
+      emplacamentoVal:P.emplacamento, setEmplacamento:(e)=>setP({ emplacamento:Number(e.target.value) }),
+      resetPremissas: () => self.setState({ premissas: Object.assign({}, self.PREMISSAS_DEFAULT) }),
+      winnerName: winner.nome, gapToSecond: self.brl(second.liquido-winner.liquido), spread: self.brl(last.liquido-winner.liquido),
+      legend, bars,
+      weightsOpen: this.state.weightsOpen, weightsToggleLabel: this.state.weightsOpen ? '▲' : '▼', toggleWeights: () => self.setState(s => ({ weightsOpen: !s.weightsOpen })),
+      people, consensus
+    };
+  }
+
+  buildFinanciamento(all, byId) {
+    const self = this;
+    const F = this.state.financing;
+    const setF = (patch) => self.setState(s => ({ financing: Object.assign({}, s.financing, patch) }));
+    const toggleModel = (id) => self.setState(s => {
+      const has = s.financing.selectedIds.includes(id);
+      if (has) return { financing: Object.assign({}, s.financing, { selectedIds: s.financing.selectedIds.filter(x=>x!==id) }) };
+      if (s.financing.selectedIds.length >= 3) return s;
+      return { financing: Object.assign({}, s.financing, { selectedIds: [...s.financing.selectedIds, id] }) };
+    });
+
+    const parcelaCalc = (preco, entradaPct, prazo, taxaPct) => {
+      const saldo = preco * (1 - entradaPct/100);
+      const i = taxaPct/100;
+      const n = prazo;
+      const parcela = saldo * (i * Math.pow(1+i, n)) / (Math.pow(1+i, n) - 1);
+      const totalPago = parcela * n;
+      const jurosEvitados = totalPago - saldo;
+      return { saldo, parcela, totalPago, jurosEvitados };
+    };
+
+    const modeloChecklist = all.map(v => ({
+      id: v.id, nome: v.nome, checked: F.selectedIds.includes(v.id),
+      disabled: !F.selectedIds.includes(v.id) && F.selectedIds.length>=3,
+      onToggle: () => toggleModel(v.id)
+    }));
+
+    const results = F.selectedIds.map(id => {
+      const v = byId[id];
+      const calc = parcelaCalc(v.preco, F.entradaPct, F.prazoMeses, F.taxaRecusa);
+      const bonus = F.bonusAlt;
+      const melhor = bonus > calc.jurosEvitados ? 'BÔNUS À VISTA' : 'TAXA 0%';
+      const vantagem = Math.abs(bonus - calc.jurosEvitados);
+      return {
+        id, nome: v.nome, precoStr: this.brl(v.preco), photoSrc: (this.FOTOS[id] && this.FOTOS[id][0]) || '', hasPhoto: !!(this.FOTOS[id] && this.FOTOS[id][0]),
+        saldoStr: this.brl(calc.saldo), parcelaStr: this.brl2(calc.parcela), totalPagoStr: this.brl(calc.totalPago),
+        jurosEvitadosStr: this.brl(calc.jurosEvitados), bonusStr: this.brl(bonus),
+        melhor, melhorIsBonus: melhor==='BÔNUS À VISTA', vantagemStr: this.brl(vantagem)
+      };
+    });
+    const hasResults = results.length>0, hasSingle = results.length===1, hasMultiple = results.length>1;
+    const single = hasSingle ? Object.assign({}, results[0], this.buildCarousel(F.selectedIds[0], 'fin')) : null;
+    const singleV = hasSingle ? byId[F.selectedIds[0]] : null;
+
+    let jurosD='', bonusD='', hasCross=false, crossX=null, crossY=null, crossLabel='';
+    if (hasSingle) {
+      const preco = singleV.preco;
+      const entradaSamples = []; for (let e=30; e<=90; e+=5) entradaSamples.push(e);
+      const jurosSeries = entradaSamples.map(e => parcelaCalc(preco, e, F.prazoMeses, F.taxaRecusa).jurosEvitados);
+      const bonus = F.bonusAlt;
+      const W=640,H=200,ML=60,MR=16,MT=12,MB=24;
+      const maxY = Math.max(bonus, ...jurosSeries) * 1.1 || 1;
+      const xOf = (e) => ML + (e-30)/(90-30)*(W-ML-MR);
+      const yOf = (v) => MT + (1 - v/maxY) * (H-MT-MB);
+      const jurosPts = entradaSamples.map((e,i) => xOf(e)+','+yOf(jurosSeries[i]));
+      jurosD = 'M'+jurosPts.join(' L');
+      bonusD = 'M'+xOf(30)+','+yOf(bonus)+' L'+xOf(90)+','+yOf(bonus);
+      let crossPct = null;
+      for (let i=0;i<entradaSamples.length-1;i++) {
+        const a = jurosSeries[i]-bonus, b = jurosSeries[i+1]-bonus;
+        if ((a>=0&&b<0)||(a<=0&&b>0)) { crossPct = entradaSamples[i] + (a/(a-b))*5; break; }
+      }
+      crossLabel = crossPct!=null ? ('Acima de ' + crossPct.toFixed(0) + '% de entrada, o bônus vence.') : (bonus>parcelaCalc(preco,F.entradaPct,F.prazoMeses,F.taxaRecusa).jurosEvitados ? 'O bônus vence em toda a faixa de entrada.' : 'A taxa 0% vence em toda a faixa de entrada.');
+      hasCross = crossPct!=null;
+      crossX = hasCross ? xOf(crossPct) : null;
+      crossY = hasCross ? yOf(bonus) : null;
+    }
+
+    return {
+      modeloChecklist, selectedCount: F.selectedIds.length,
+      hasResults, hasSingle, hasMultiple, single, results,
+      entradaPct: F.entradaPct, entradaLabel: F.entradaPct+'%', setEntrada: (e) => setF({ entradaPct: Number(e.target.value) }),
+      prazoOpts: [12,24,36,48].map(n => ({ label:n+'m', checked: F.prazoMeses===n, onClick: () => setF({ prazoMeses:n }) })),
+      bonusAlt: F.bonusAlt, setBonusAlt: (e) => setF({ bonusAlt: Number(e.target.value) }),
+      taxaRecusa: F.taxaRecusa, setTaxaRecusa: (e) => setF({ taxaRecusa: Number(e.target.value) }),
+      chip1: () => setF({ selectedIds:['ora03'], entradaPct:60, prazoMeses:24, bonusAlt:20000 }),
+      chip2: () => setF({ selectedIds:['dolphin_gs'], entradaPct:60, prazoMeses:24, bonusAlt:8000 }),
+      jurosD, bonusD, hasCross, crossX, crossY, crossLabel
+    };
+  }
+
+  buildSensibilidade(all) {
+    const self = this;
+    const P = this.state.premissas;
+
+    const kmSamples = []; for (let i=0;i<=8;i++) kmSamples.push(6000 + i*(24000/8));
+    const W=640,H=260,ML=50,MR=16,MT=12,MB=28;
+    const seriesData = all.map(v => kmSamples.map(km => this.computeVehicle(v, Object.assign({}, P, { kmAno:km })).liquido));
+    const allVals = seriesData.flat();
+    const yMin = Math.min(...allVals), yMax = Math.max(...allVals);
+    const xOf = (km) => ML + (km-6000)/(30000-6000)*(W-ML-MR);
+    const yOf = (val) => MT + (1-(val-yMin)/(yMax-yMin||1))*(H-MT-MB);
+    const PALETTE = ['#ec3013','#4d170e','#9b9797','#605d5d','#ff9783','#7c1405','#dd2b0f','#2d2b2b','#c94b39','#bab6b6','#444141'];
+    const linesOff = this.state.sensLinesOff;
+    const kmLines = all.map((v,i) => {
+      const pts = kmSamples.map((km,j) => xOf(km)+','+yOf(seriesData[i][j]));
+      const hidden = !!linesOff[v.id];
+      return { id:v.id, nome:v.nome, color:PALETTE[i%PALETTE.length], d:'M'+pts.join(' L'),
+        lineOpacity: hidden?0:1, legendOpacity: hidden?0.35:1,
+        onToggle: () => self.setState(s => ({ sensLinesOff: Object.assign({}, s.sensLinesOff, { [v.id]: !s.sensLinesOff[v.id] }) })) };
+    });
+    const VBH = 275;
+    const kmXVals = [6000,12000,18000,24000,30000];
+    const kmX = kmXVals.map(km => ({ x:xOf(km), pct:(xOf(km)/W*100).toFixed(1), label:(km/1000)+' mil km' }));
+    const kmY = []; for (let i=0;i<=4;i++) { const val = yMin + (yMax-yMin)*i/4; const y = yOf(val); kmY.push({ y, pct:(y/VBH*100).toFixed(1), label:'R$ '+Math.round(val/1000)+' mil' }); }
+    const kmChartX0 = ML, kmChartX1 = W-MR, kmChartY0 = MT, kmChartY1 = H-MB;
+
+    const refId = this.state.sensRefId;
+    const refV = all.find(v=>v.id===refId) || all[0];
+    const others = all.filter(v=>v.id!==refV.id);
+    const maxPct = Math.max(...others.map(v => (v.preco+P.emplacamento+v.energia+v.combustivel+v.seguro+v.manutencao+v.ipva-refV.liquido)/v.preco*100), 60);
+    const breakeven = others.map(v => {
+      const revendaNecessaria = v.preco+P.emplacamento+v.energia+v.combustivel+v.seguro+v.manutencao+v.ipva-refV.liquido;
+      const pctNecessaria = revendaNecessaria/v.preco*100;
+      const diffAtual = v.liquido-refV.liquido;
+      return {
+        nome:v.nome, diffAtualStr: self.brl(diffAtual), revendaModeladaStr: (v.residual.base*100).toFixed(0)+'%',
+        pctNecessaria, pctStr: pctNecessaria.toFixed(0)+'%', barPct: Math.max(0,Math.min(100, pctNecessaria/maxPct*100)),
+        barColor: pctNecessaria>50 ? 'var(--color-accent-500)' : 'var(--color-neutral-500)',
+        aboveLine: pctNecessaria>50, avaliacao: pctNecessaria>50 ? 'Pouco plausível' : 'Plausível'
+      };
+    }).sort((a,b)=>b.pctNecessaria-a.pctNecessaria);
+    const refOptions = all.map(v => ({ value:v.id, label:v.nome }));
+
+    const bevOnly = all.filter(v=>v.tipo==='BEV');
+    const priceSamples = []; for (let i=0;i<=9;i++) priceSamples.push(0.80 + i*((3.50-0.80)/9));
+    const avgConsumo = bevOnly.reduce((s,v)=>s+v.consumo,0)/bevOnly.length;
+    const kmTotal = P.kmAno*P.anos;
+    const energiaAt = (preco) => (avgConsumo/100)*kmTotal*P.fatorPerda*preco;
+    const eVals = priceSamples.map(energiaAt);
+    const eMax = Math.max(...eVals);
+    const AW=640,AH=220,AML=60,AMR=16,AMT=12,AMB=28;
+    const axOf = (p) => AML + (p-0.80)/(3.50-0.80)*(AW-AML-AMR);
+    const ayOf = (v) => AMT + (1-v/eMax)*(AH-AMT-AMB);
+    const areaPts = priceSamples.map((p,i) => axOf(p)+','+ayOf(eVals[i]));
+    const areaD = 'M'+axOf(0.80)+','+ayOf(0)+' L'+areaPts.join(' L')+' L'+axOf(3.50)+','+ayOf(0)+' Z';
+    const lineD = 'M'+areaPts.join(' L');
+    const markers = [
+      { p:1.00, label:'R$ 1,00/kWh — wallbox em casa (indisponível)' },
+      { p:1.96, label:'R$ 1,96/kWh — desconto BYD' },
+      { p:2.30, label:'R$ 2,30/kWh — base' },
+      { p:2.80, label:'R$ 2,80/kWh — DC rápido' }
+    ].map(m => ({ x:axOf(m.p), pct:(axOf(m.p)/AW*100).toFixed(1), label:m.label }));
+    const worstEnergia = self.brl(energiaAt(3.50));
+    const priceXTicksArr = [0.80,1.55,2.30,2.90,3.50].map(p => ({ pct:(axOf(p)/AW*100).toFixed(1), label:'R$ '+p.toFixed(2).replace('.',',') }));
+    const priceYTopLabel = self.brl(eMax), priceYBottomLabel = 'R$ 0';
+
+    const custoKmRows = [...this.CUSTO_KM].sort((a,b)=>a.rsKm-b.rsKm).map(r => ({
+      cenario:r.cenario, rsKmStr:r.rsKm.toFixed(3).replace('.',','), nota:r.nota,
+      bg: r.destaque==='alerta' ? 'var(--color-accent-200)' : r.destaque==='ref' ? 'var(--ev-surface-2)' : 'transparent'
+    }));
+
+    return {
+      kmLines, kmChartX0, kmChartX1, kmChartY0, kmChartY1,
+      kmX0:kmX[0], kmX1:kmX[1], kmX2:kmX[2], kmX3:kmX[3], kmX4:kmX[4],
+      kmY0:kmY[0], kmY1:kmY[1], kmY2:kmY[2], kmY3:kmY[3], kmY4:kmY[4],
+      refId, refOptions, setRefId: (e) => self.setState({ sensRefId: e.target.value }),
+      breakeven,
+      areaD, lineD, markers, worstEnergia, priceYTopLabel, priceYBottomLabel,
+      priceX0:priceXTicksArr[0], priceX1:priceXTicksArr[1], priceX2:priceXTicksArr[2], priceX3:priceXTicksArr[3], priceX4:priceXTicksArr[4],
+      custoKmRows
+    };
+  }
+
+  renderVals() {
+    const seguroMinMaxStr = this.brl(Math.min(...this.VEICULOS.map(v=>this.computeVehicle(v).seguro))) + ' a ' + this.brl(Math.max(...this.VEICULOS.map(v=>this.computeVehicle(v).seguro)));
+    const custoLabel = this.state.includeRevenda ? 'Custo líquido em 5 anos' : 'Custo direto em 5 anos (sem revenda)';
+    const custoLabelShort = this.state.includeRevenda ? 'Custo líq. 5a' : 'Custo direto 5a';
+    const custoTip = this.state.includeRevenda ? 'TCO: preço + energia + seguro + manutenção − revenda, ao longo do horizonte de posse.' : 'Custo direto: preço + energia + seguro + manutenção, sem descontar a revenda projetada.';
+    const all = this.VEICULOS.map(v => this.computeVehicle(v));
+    const byId = {}; all.forEach(v => byId[v.id] = v);
+    const f = this.state.filters;
+    const searchLower = this.state.search.trim().toLowerCase();
+
+    let visible = all.filter(v => {
+      if (f.marcas.length && !f.marcas.includes(v.marca)) return false;
+      if (v.preco < f.priceMin || v.preco > f.priceMax) return false;
+      if (v.autonomia < f.autonomiaMin) return false;
+      if (f.latinNcapOnly && !/estrela/i.test(v.latinNcap)) return false;
+      if (f.adasOnly && !v.acc) return false;
+      if (f.origens.length && !f.origens.includes(v.origem)) return false;
+      if (searchLower && !(v.nome.toLowerCase().includes(searchLower) || v.marca.toLowerCase().includes(searchLower))) return false;
+      return true;
+    });
+
+    const allIndices = this.computeIndices(all);
+    const indices = this.computeIndices(visible.length ? visible : all);
+    visible = visible.map(v => Object.assign({}, v, { indice: indices[v.id] }));
+
+    const sortDescGood = { indice:true, autonomia:true };
+    const sk = f.sortBy;
+    visible.sort((a,b) => sortDescGood[sk] ? b[sk]-a[sk] : a[sk]-b[sk]);
+
+    const rankingSorted = [...all].map(v=>Object.assign({}, v, {indice: allIndices[v.id]})).sort((a,b)=>a.liquido-b.liquido);
+    const maxLiquidoAll = Math.max(...rankingSorted.map(v=>v.liquido));
+
+    const self = this;
+    const rankingList = rankingSorted.map((v,i) => ({
+      rank: i+1, nome: v.nome, liquidoStr: this.brl(v.liquido), barPct: (v.liquido/maxLiquidoAll*100).toFixed(1),
+      onClick: () => self.setState({ drawerId: v.id })
+    }));
+
+    const badgeInfo = {
+      ex2_max: { badge:'Recomendação principal', badgeClass:'tag-accent' },
+      dolphin_mini: { badge:'Menor custo total', badgeClass:'tag-outline' },
+      ora03: { badge:'Melhor segurança', badgeClass:'tag-neutral' }
+    };
+    const curatedBullets = {
+      ex2_max: [ 'Índice de adequação mais alto entre os importados: ' + allIndices.ex2_max.toFixed(1).replace('.', ',') + '/100', 'ADAS completo com piloto adaptativo (ACC) e câmera 540°', 'Porta-malas de 375 L, o maior entre os concorrentes diretos' ],
+      dolphin_mini: [ 'Menor custo líquido em 5 anos do comparativo: ' + this.brl(byId.dolphin_mini.liquido), 'R$/km mais baixo do comparativo: ' + this.brl2(byId.dolphin_mini.rsKm), 'Desconto de 15% na energia via rede BYD/Shell Recharge' ],
+      ora03: [ 'Único modelo com Latin NCAP 5 estrelas', '7 airbags, o maior número do comparativo', 'Bônus comercial de R$ 20.000 disponível na compra à vista' ]
+    };
+    const curatedIds = ['ex2_max','dolphin_mini','ora03'];
+    const extraIds = [...all].sort((a,b)=>allIndices[b.id]-allIndices[a.id]).map(v=>v.id).filter(id=>!curatedIds.includes(id)).slice(0,1);
+    const topCards = curatedIds.concat(extraIds).map(id => {
+      const v = byId[id];
+      const badge = badgeInfo[id] || { badge:'Bem avaliado', badgeClass:'tag-neutral' };
+      const bullets = curatedBullets[id] || [
+        'Índice de adequação: ' + allIndices[id].toFixed(1).replace('.', ',') + '/100',
+        v.marca + ' · ' + v.origem,
+        'Autonomia de ' + v.autonomia + ' km'
+      ];
+      const yts = this.YT_LINKS[id] || ['',''];
+      return Object.assign({}, badge, this.buildCarousel(id, 'hero'), {
+        id, nome:v.nome, precoStr:this.brl(v.preco), liquidoStr:this.brl(v.liquido), rsKmStr:this.brl2(v.rsKm),
+        b1:bullets[0], b2:bullets[1], b3:bullets[2],
+        yt1Href: yts[0] || '#', yt2Href: yts[1] || '#',
+        onOpen: () => self.setState({ drawerId:id })
+      });
+    });
+
+    const navItems = this.NAV_DEFS.map(n => {
+      const active = this.state.section === n.id;
+      return Object.assign({}, n, {
+        borderColor: active ? 'var(--color-accent)' : 'transparent',
+        textColor: active ? 'var(--color-accent)' : 'var(--color-text)',
+        onClick: () => self.setState({ section: n.id, drawerId: null })
+      });
+    });
+
+    const MARCAS_LIST = ['BYD','Geely','MG','GWM','Leapmotor','Jaecoo','Omoda','Chery'];
+    const marcasList = MARCAS_LIST.map(m => ({ name:m, selected: f.marcas.includes(m), cls: f.marcas.includes(m) ? 'tag-accent' : 'tag-neutral', onClick: () => self.setFilter({ marcas: self.toggleInArr(f.marcas, m) }) }));
+    const origensList = ['Nacional','Importado'].map(o => ({ name:o, selected: f.origens.includes(o), cls: f.origens.includes(o) ? 'tag-accent' : 'tag-neutral', onClick: () => self.setFilter({ origens: self.toggleInArr(f.origens, o) }) }));
+
+    const numCols = [
+      { key:'preco', get:v=>v.preco, lowerBetter:true, fmt:v=>this.brl(v) },
+      { key:'liquido', get:v=>v.liquido, lowerBetter:true, fmt:v=>this.brl(v) },
+      { key:'rsKm', get:v=>v.rsKm, lowerBetter:true, fmt:v=>this.brl2(v) },
+      { key:'autonomia', get:v=>v.autonomia, lowerBetter:false, fmt:v=>v+' km' },
+      { key:'consumo', get:v=>v.efiCost, lowerBetter:true, fmt:v=>this.brl2(v)+'/km' },
+      { key:'indice', get:v=>v.indice, lowerBetter:false, fmt:v=>v.toFixed(1).replace('.',',') }
+    ];
+    const colRanges = {};
+    numCols.forEach(c => { colRanges[c.key] = visible.map(c.get); });
+
+    const tableRows = visible.map(v => {
+      const cells = {};
+      numCols.forEach(c => {
+        const val = c.get(v);
+        const b = this.bucketOf(val, colRanges[c.key], c.lowerBetter);
+        cells[c.key+'Bg'] = this.bucketBg(b);
+        cells[c.key+'Fg'] = this.bucketFg(b);
+        cells[c.key+'Str'] = c.fmt(val);
+      });
+      const checked = this.state.compareSelected.includes(v.id);
+      const rowPhotoSrc = (this.FOTOS[v.id] && this.FOTOS[v.id][0]) || '';
+      cells.consumoStr = v.tipo === 'BEV' ? v.consumo.toFixed(2).replace('.',',')+' kWh/100km' : v.kmPorLitro.toFixed(1).replace('.',',')+' km/l'+(v.kmPorLitroEstimado?' (est.)':'');
+      return Object.assign({}, cells, {
+        id: v.id, nome: v.nome, marca: v.marca, tipo: v.tipo, photoSrc: rowPhotoSrc, hasPhoto: !!rowPhotoSrc, noPhoto: !rowPhotoSrc, rsMesStr: this.brl(v.rsMes), portaMalasStr: v.portaMalas+' L', airbags: v.airbags, latinNcap: v.latinNcap, adas: v.adas, revendaStr: this.brl(v.revenda),
+        checked, checkDisabled: !checked && this.state.compareSelected.length>=3,
+        onToggleCheck: () => self.toggleCompare(v.id),
+        onRowClick: () => self.setState({ drawerId: v.id })
+      });
+    });
+
+    const footer = {};
+    numCols.forEach(c => {
+      if (visible.length) {
+        const vals = colRanges[c.key];
+        footer[c.key] = c.fmt(Math.min(...vals)) + ' · ' + c.fmt(this.medianOf(vals)) + ' · ' + c.fmt(Math.max(...vals));
+      } else footer[c.key] = '—';
+    });
+
+    const compareVehicles = this.state.compareSelected.map(id => byId[id]).map(v => Object.assign({}, v, { indice: allIndices[v.id] }));
+    const ATTR_ROWS = [
+      { label:'Tipo', get:v=>v.tipo, fmt:v=>v, isText:true },
+      { label:'Preço', get:v=>v.preco, fmt:v=>this.brl(v), lowerBetter:true },
+      { label:custoLabel, get:v=>v.liquido, fmt:v=>this.brl(v), lowerBetter:true },
+      { label:'R$/km', get:v=>v.rsKm, fmt:v=>this.brl2(v), lowerBetter:true },
+      { label:'R$/mês', get:v=>v.rsMes, fmt:v=>this.brl(v), lowerBetter:true },
+      { label:'Autonomia', get:v=>v.autonomia, fmt:v=>v+' km', lowerBetter:false },
+      { label:'Consumo', get:v=>v.consumo, fmt:v=>v.toFixed(2).replace('.',',')+' kWh/100km', lowerBetter:true },
+      { label:'Porta-malas', get:v=>v.portaMalas, fmt:v=>v+' L', lowerBetter:false },
+      { label:'Airbags', get:v=>v.airbags, fmt:v=>String(v), lowerBetter:false },
+      { label:'Potência', get:v=>v.potencia, fmt:v=>v+' cv', lowerBetter:false },
+      { label:'Aceleração 0-100', get:v=>v.aceleracao, fmt:v=>v.toFixed(1).replace('.',',')+' s', lowerBetter:true },
+      { label:'Recarga DC', get:v=>v.recargaDC, fmt:v=>v, isText:true },
+      { label:'Latin NCAP', get:v=>v.latinNcap, fmt:v=>v, isText:true },
+      { label:'ADAS', get:v=>v.adas, fmt:v=>v, isText:true },
+      { label:'Origem', get:v=>v.origem, fmt:v=>v, isText:true },
+      { label:'Revenda base', get:v=>v.residual.base*100, fmt:v=>v.toFixed(0)+'%', lowerBetter:false },
+      { label:'Índice', get:v=>v.indice, fmt:v=>v.toFixed(1).replace('.',',')+'/100', lowerBetter:false }
+    ];
+    const compareRows = ATTR_ROWS.map(row => {
+      const raws = compareVehicles.map(row.get);
+      let bestIdx = -1;
+      if (!row.isText && compareVehicles.length) {
+        const target = row.lowerBetter ? Math.min(...raws) : Math.max(...raws);
+        bestIdx = raws.indexOf(target);
+      }
+      const cells = compareVehicles.map((v,i) => ({ text: row.fmt(row.get(v)), border: i===bestIdx ? '2px solid var(--color-accent)' : '1px solid var(--color-divider)' }));
+      return { label: row.label, cells };
+    });
+
+    const drawerV = this.state.drawerId ? byId[this.state.drawerId] : null;
+    const drawer = drawerV ? Object.assign({}, drawerV, this.buildCarousel(drawerV.id, 'drawer'), {
+      yt1Href: (this.YT_LINKS[drawerV.id] && this.YT_LINKS[drawerV.id][0]) || '#',
+      yt2Href: (this.YT_LINKS[drawerV.id] && this.YT_LINKS[drawerV.id][1]) || '#',
+      revendaNote: this.state.includeRevenda ? '' : ' (não descontada do total)',
+      precoStr: this.brl(drawerV.preco), autonomiaStr: drawerV.autonomia+' km', potenciaStr: drawerV.potencia+' cv', portaMalasStr: drawerV.portaMalas+' L',
+      hasCombustivel: drawerV.combustivel>0, combustivelStr: this.brl(drawerV.combustivel),
+      energiaStr: this.brl(drawerV.energia), seguroStr: this.brl(drawerV.seguro), manutencaoStr: this.brl(drawerV.manutencao), revendaStr: this.brl(drawerV.revenda), liquidoStr: this.brl(drawerV.liquido),
+      indiceStr: (allIndices[drawerV.id]).toFixed(1).replace('.',',') + '/100'
+    }) : null;
+
+    const section = this.state.section;
+
+    const COLS = [
+      { key:'preco', label:'Preço', align:'right', sortable:true, tip:'Preço de tabela do modelo, sem emplacamento, acessórios ou bônus.', term:'Preço de tabela' },
+      { key:'liquido', label:custoLabelShort, align:'right', sortable:true, tip:custoTip, term:'TCO' },
+      { key:'rsKm', label:'R$/km', align:'right', sortable:true, tip:'Custo líquido dividido pela quilometragem total rodada no período.', term:'R$/km' },
+      { key:'rsMes', label:'R$/mês', align:'right', sortable:false, tip:'Custo líquido dividido pelo número de meses de posse.', term:'R$/mês' },
+      { key:'autonomia', label:'Autonomia', align:'right', sortable:true, tip:'Para BEV: distância com a bateria cheia. Para PHEV/HEV: alcance combinado com tanque cheio (a autonomia só no elétrico é bem menor — veja a ficha do modelo).', term:'Autonomia' },
+      { key:'consumo', label:'Consumo', align:'right', sortable:true, tip:'Energia gasta a cada 100 km (kWh/100km). Quanto menor, mais eficiente.', term:'Consumo' },
+      { key:'portaMalas', label:'Porta-malas', align:'right', sortable:false, tip:'Capacidade do porta-malas, em litros.', term:'Porta-malas' },
+      { key:'airbags', label:'Airbags', align:'right', sortable:false, tip:'Número de airbags de série.', term:'Airbags' },
+      { key:'latinNcap', label:'Latin NCAP', align:'left', sortable:false, tip:'Resultado no teste de colisão do Latin NCAP, quando publicado para o modelo.', term:'Latin NCAP' },
+      { key:'adas', label:'ADAS', align:'left', sortable:false, tip:'Sistemas avançados de assistência ao motorista — frenagem automática, alerta de faixa, piloto adaptativo (ACC).', term:'ADAS' },
+      { key:'revenda', label:'Revenda', align:'right', sortable:false, tip:'Valor estimado recuperado na venda do carro ao fim do período, no cenário base.', term:'Revenda' },
+      { key:'indice', label:'Índice', align:'right', sortable:true, tip:'Nota de 0 a 100 que pondera custo, segurança, autonomia, rede, revenda, eficiência, espaço e conforto — relativa ao conjunto filtrado.', term:'Índice de adequação' }
+    ];
+    const columns = COLS.map((c,i) => ({
+      key:c.key, label:c.label, align:c.align, tip:c.tip,
+      cursor: c.sortable ? 'pointer' : 'default',
+      arrow: f.sortBy===c.key ? '▾' : '',
+      tipSide: i >= 8 ? 'right' : 'left',
+      onClick: c.sortable ? (() => self.setFilter({ sortBy:c.key })) : (() => {}),
+      onGlossary: (e) => { e.stopPropagation(); self.setState({ section:'glossary', glossarySearch: c.term }); }
+    }));
+    const goGlossary = (term) => (e) => { if (e) e.stopPropagation(); self.setState({ section:'glossary', glossarySearch: term }); };
+
+    const gCat = this.state.glossaryCategory;
+    const gSearch = this.state.glossarySearch.trim().toLowerCase();
+    const glossaryFiltered = this.GLOSSARY_TERMS.filter(g => {
+      if (gCat && g.categoria !== gCat) return false;
+      if (gSearch && !(g.termo.toLowerCase().includes(gSearch) || g.definicao.toLowerCase().includes(gSearch) || g.sigla.toLowerCase().includes(gSearch))) return false;
+      return true;
+    }).map(g => Object.assign({}, g, { hasSigla: !!g.sigla }));
+    const GLOSSARY_CATS = ['Técnico','Financeiro','Regulatório','Segurança'];
+    const glossaryCats = GLOSSARY_CATS.map(name => ({ name, cls: gCat===name ? 'tag-accent' : 'tag-neutral', onClick: () => self.setState({ glossaryCategory: gCat===name ? null : name }) }));
+
+    const sim = this.buildSimulador(all);
+    const sens = this.buildSensibilidade(all);
+    const fin = this.buildFinanciamento(all, byId);
+
+    const specCards = all.map(v => {
+      const yts = this.YT_LINKS[v.id] || ['',''];
+      return Object.assign({}, this.buildCarousel(v.id, 'spec'), {
+        id: v.id, nome: v.nome, marca: v.marca, origem: v.origem,
+        precoStr: this.brl(v.preco), autonomiaStr: v.autonomia+' km', potenciaStr: v.potencia+' cv', portaMalasStr: v.portaMalas+' L',
+        indice: allIndices[v.id], indiceStr: allIndices[v.id].toFixed(1).replace('.',','),
+        yt1Href: yts[0] || '#', yt2Href: yts[1] || '#',
+        onOpen: () => self.setState({ drawerId: v.id })
+      });
+    });
+
+    const FONTES_MONTADORAS = [
+      { nome:'BYD Brasil — Dolphin Mini, Dolphin, Dolphin SE', url:'https://www.byd.com/br/car/dolphin-mini', extraido:'Preço de tabela, especificações, desconto de energia na rede Shell' },
+      { nome:'Geely Brasil — EX2', url:'https://static.autoforce.com/plugins/files/clientes/geely-brasil/produtos/ws/Ficha_Tecnica_GEELY_EX2.pdf', extraido:'Ficha técnica, autonomia, recarga DC' },
+      { nome:'MG Motor Brasil — MG4 Urban', url:'https://mgmotoroficial.com.br/model/mg4urban/', extraido:'Versões, preços, ADAS' },
+      { nome:'GWM Brasil — ORA 5 e ORA 03 BEV58', url:'https://www.gwmmotors.com.br/pt/modelos/ora-03-bev58', extraido:'Preço, bônus comercial, Latin NCAP' },
+      { nome:'Leapmotor B10 — FIPE', url:'https://www.mobiauto.com.br/tabela-fipe/carros/leapmotor/b10', extraido:'Preço de tabela FIPE 2026' }
+    ];
+    const FONTES_SEGURANCA = [
+      { nome:'Latin NCAP — resultados oficiais', url:'https://www.latinncap.com', extraido:'Resultado de colisão do ORA 03 e do Dolphin Plus' }
+    ];
+    const FONTES_MERCADO = [
+      { nome:'Tabela FIPE', url:'https://veiculos.fipe.org.br', extraido:'Valores de referência para calibrar os cenários de revenda' }
+    ];
+    const fontesGroups = [
+      { titulo:'Montadoras', rows: FONTES_MONTADORAS },
+      { titulo:'Segurança', rows: FONTES_SEGURANCA },
+      { titulo:'Mercado e depreciação', rows: FONTES_MERCADO }
+    ].map(g => ({ titulo:g.titulo, rows: g.rows.map(r => Object.assign({}, r, { status:'Verificado em 09/08/2026' })) }));
+
+    const searchQ = this.state.search.trim().toLowerCase();
+    let searchResults = [];
+    if (searchQ) {
+      const vMatches = all.filter(v => v.nome.toLowerCase().includes(searchQ) || v.marca.toLowerCase().includes(searchQ)).slice(0,5)
+        .map(v => ({ key:'v-'+v.id, kind:'Modelo', label:v.nome, onClick: () => self.setState({ drawerId:v.id, search:'' }) }));
+      const gMatches = this.GLOSSARY_TERMS.filter(g => g.termo.toLowerCase().includes(searchQ) || g.definicao.toLowerCase().includes(searchQ)).slice(0,4)
+        .map(g => ({ key:'g-'+g.termo, kind:'Glossário', label:g.termo, onClick: () => self.setState({ section:'glossary', glossarySearch:g.termo, search:'' }) }));
+      searchResults = vMatches.concat(gMatches);
+    }
+
+    return {
+      theme: this.state.theme, isDark: this.state.theme==='dark', isLight: this.state.theme==='light',
+      toggleTheme: () => self.setState(s => ({ theme: s.theme==='light'?'dark':'light' })),
+      presentation: this.state.presentation, isNotPresentation: !this.state.presentation,
+      presentationScale: this.state.presentation ? '1.15em' : '1em',
+      togglePresentation: () => self.setState(s => ({ presentation: !s.presentation })),
+      search: this.state.search, setSearch: (e) => self.setState({ search: e.target.value }),
+      navItems,
+      isOverview: section==='overview', isCompare: section==='compare',
+      isGlossary: section==='glossary',
+      isSimulator: section==='simulator', isSensitivity: section==='sensitivity', isSpec: section==='spec', isSources: section==='sources', isFinancing: section==='financing',
+      isPlaceholder: !['overview','compare','glossary','simulator','sensitivity','spec','sources','financing'].includes(section),
+      placeholderInfo: this.PLACEHOLDER[section] || {title:'',desc:''},
+      sim, sens, fin, specCards, fontesGroups,
+      hasSnackbar: !!this.state.snackbar, snackbarText: this.state.snackbar || '',
+      searchResults, hasSearchResults: searchResults.length>0,
+      custoLabel, custoTip, seguroMinMaxStr,
+      includeRevenda: this.state.includeRevenda, includeRevendaCls: this.state.includeRevenda ? 'tag-accent' : 'tag-neutral',
+      toggleIncludeRevenda: () => self.setState(s => ({ includeRevenda: !s.includeRevenda })),
+      glossarySearch: this.state.glossarySearch, setGlossarySearch: (e) => self.setState({ glossarySearch: e.target.value }),
+      glossaryCats, glossaryFiltered, glossaryEmpty: glossaryFiltered.length===0,
+      columns,
+      tipTco: goGlossary('TCO'), tipAutonomia: goGlossary('Autonomia'), tipPotencia: goGlossary('Potência'),
+      tipPortaMalas: goGlossary('Porta-malas'), tipIndice: goGlossary('Índice de adequação'),
+      goOverview: () => self.setState({ section:'overview' }),
+      goCompare: () => self.setState({ section:'compare' }),
+      goSimulator: () => self.setState({ section:'simulator' }),
+      goSensitivity: () => self.setState({ section:'sensitivity' }),
+      openOra03: () => self.setState({ drawerId:'ora03' }),
+      ctxPapel: this.state.context.papel, onCtxPapel: (e) => self.setContextPapel(e.target.value),
+      ctxIdade: this.state.context.idade, onCtxIdade: (e) => self.setContextIdade(e.target.value),
+      ctxKmAno: this.state.premissas.kmAno, onCtxKmAno: (e) => self.setContextKmAno(Number(e.target.value)),
+      ctxRecarga: this.state.context.recarga, onCtxRecarga: (e) => self.setContextRecarga(e.target.value),
+      topCards, rankingList,
+      marcasList, origensList,
+      priceMin: f.priceMin, priceMax: f.priceMax, priceMinLabel: this.brl(f.priceMin), priceMaxLabel: this.brl(f.priceMax),
+      setPriceMin: (e) => self.setFilter({ priceMin: Math.min(Number(e.target.value), f.priceMax) }),
+      setPriceMax: (e) => self.setFilter({ priceMax: Math.max(Number(e.target.value), f.priceMin) }),
+      autonomiaMin: f.autonomiaMin, autonomiaMinLabel: f.autonomiaMin+' km',
+      setAutonomiaMin: (e) => self.setFilter({ autonomiaMin: Number(e.target.value) }),
+      latinNcapOnly: f.latinNcapOnly, latinNcapCls: f.latinNcapOnly ? 'tag-accent' : 'tag-neutral', toggleLatinNcap: () => self.setFilter({ latinNcapOnly: !f.latinNcapOnly }),
+      adasOnly: f.adasOnly, adasCls: f.adasOnly ? 'tag-accent' : 'tag-neutral', toggleAdas: () => self.setFilter({ adasOnly: !f.adasOnly }),
+      sortBy: f.sortBy, setSortBy: (e) => self.setFilter({ sortBy: e.target.value }),
+      clearFilters: () => self.clearFilters(),
+      visibleCount: visible.length, totalCount: all.length, isEmpty: visible.length===0, isNotEmpty: visible.length>0,
+      sortByPreco: () => self.setFilter({ sortBy:'preco' }), sortByLiquido: () => self.setFilter({ sortBy:'liquido' }),
+      sortByRsKm: () => self.setFilter({ sortBy:'rsKm' }), sortByAutonomia: () => self.setFilter({ sortBy:'autonomia' }),
+      sortByConsumo: () => self.setFilter({ sortBy:'consumo' }), sortByIndice: () => self.setFilter({ sortBy:'indice' }),
+      arrowPreco: f.sortBy==='preco'?'▾':'', arrowLiquido: f.sortBy==='liquido'?'▾':'', arrowRsKm: f.sortBy==='rsKm'?'▾':'',
+      arrowAutonomia: f.sortBy==='autonomia'?'▾':'', arrowConsumo: f.sortBy==='consumo'?'▾':'', arrowIndice: f.sortBy==='indice'?'▾':'',
+      tableRows, footer,
+      hasCompare: this.state.compareSelected.length>0, compareCount: this.state.compareSelected.length,
+      compareChips: this.state.compareSelected.map(id => ({ id, nome: byId[id].nome, onRemove: () => self.toggleCompare(id) })),
+      compareExpanded: this.state.compareExpanded, expandCompare: () => self.setState({ compareExpanded:true }), collapseCompare: () => self.setState({ compareExpanded:false }),
+      compareVehicles, compareRows, clearCompare: () => self.setState({ compareSelected: [], compareExpanded:false }),
+      hasDrawer: !!drawer, drawer,
+      closeDrawer: () => self.setState({ drawerId:null }),
+      closeDrawerBg: () => self.setState({ drawerId:null }),
+      stopProp: (e) => e.stopPropagation()
+    };
+  }
+}
+
+</script>
+</body>
+</html>

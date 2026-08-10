@@ -1,0 +1,18 @@
+[build]
+  publish = "."
+  command = ""
+
+# Site é HTML/CSS/JS puro, sem build step. O roteamento das 8 seções é feito
+# por hash (#compare, #simulator, ...), então nenhum redirect de SPA é
+# estritamente necessário — mas mantemos um fallback de segurança.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
