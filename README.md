@@ -1,4 +1,4 @@
-# Decisão EV — Recife/PE
+# Dashboard Compras EV BEV e PHEV Brasil
 
 Dashboard interativo de apoio à decisão de compra de um veículo elétrico ou híbrido como
 segundo carro da família em Recife. Compara 16 modelos (11 BEV + 5 híbridos PHEV/HEV) por

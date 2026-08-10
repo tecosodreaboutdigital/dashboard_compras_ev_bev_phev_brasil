@@ -99,7 +99,7 @@ function renderShellNav(active) {
 
 function renderSidebar() {
   document.getElementById('sidebar').innerHTML = `
-    <div class="brand">Decisão EV — Recife/PE</div>
+    <div class="brand">Dashboard Compras EV BEV e PHEV Brasil</div>
     <nav>${renderShellNav(state.section)}</nav>
     <div style="padding:14px 20px;border-top:2px solid var(--color-divider);font-size:11px;color:var(--color-text-muted)">16 modelos · TCO 5 anos</div>
   `;
